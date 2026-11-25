@@ -1,0 +1,17 @@
+node_modules/
+dist/
+target/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.pyc
+*.db
+*.db-*
+*.sqlite*
+.env*
+!.env.example
+artifacts/
+test-results/
+playwright-report/
+.DS_Store
