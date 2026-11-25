@@ -630,6 +630,7 @@ mod tests {
     #[cfg(unix)]
     #[tokio::test]
     async fn timeout_kills_descendant_after_worker_parent_exits() {
+        // Hosted runners may need seconds to initialize Python before the child marker exists.
         let dir = tempfile::tempdir().unwrap();
         let script = dir.path().join("worker.py");
         let marker = dir.path().join("child.pid");
@@ -640,7 +641,7 @@ mod tests {
             &script,
             "generate",
             json!({"marker":marker}),
-            Duration::from_millis(500),
+            Duration::from_secs(5),
             receiver,
             None,
         )
@@ -657,6 +658,7 @@ mod tests {
     #[cfg(unix)]
     #[tokio::test]
     async fn termination_allows_worker_to_finish_bounded_cleanup() {
+        // Give Python time to install its signal handler; the cleanup grace remains unchanged.
         let dir = tempfile::tempdir().unwrap();
         let script = dir.path().join("worker.py");
         let marker = dir.path().join("cleanup.done");
@@ -667,7 +669,7 @@ mod tests {
             &script,
             "generate",
             json!({"marker":marker}),
-            Duration::from_millis(500),
+            Duration::from_secs(5),
             receiver,
             None,
         )
