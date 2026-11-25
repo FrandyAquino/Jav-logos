@@ -58,3 +58,5 @@ Select-density follow-up: shared component menus and font previews now use compa
 Concept cleanup follow-up: removed the sidebar DNA explanation, repaired the type specimen, aligned gallery art and added confirmed concept deletion from thumbnails/gallery.32 TypeScript tests and12 Chromium flows passed; see `concept-cleanup.md` for behavior and evidence.
 
 Delivery preparation implemented and verified: see `delivery-preparation.md` for transparent cutouts, fitted text, bundled-font outlines, variant/favicons and native ZIP evidence. Latest local counts:49 TypeScript,23 Rust,11 Python and15 Chromium flows. Initial remote CI passed frontend/Python/Linux; macOS fixture timing and missing Windows icon were corrected locally, with remote rerun pending.
+
+Reference image paste/drop follow-up: see [reference-paste-drop.md](reference-paste-drop.md) for composer clipboard/drop behavior, 66 TypeScript tests, 10 scoped Chromium regressions and 23 Rust tests passed; native Tauri paste/drop acceptance remains unrun.

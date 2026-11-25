@@ -12,6 +12,7 @@
   "app": {
     "windows": [{
       "label": "main",
+      "dragDropEnabled": false,
       "title": "JavLogos",
       "titleBarStyle": "Overlay",
       "hiddenTitle": true,

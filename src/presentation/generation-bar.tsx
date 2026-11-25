@@ -4,11 +4,30 @@ import { IconButton, shortcutModifier, type StudioState } from "./ui";
 import { SelectField } from "./select-field";
 import { ReferenceCard } from "./reference-card";
 
+function isFileDrag(transfer: DataTransfer) {
+  return (
+    Array.from(transfer.types).includes("Files") &&
+    !Array.from(transfer.types).includes("application/x-javlogos-brand")
+  );
+}
+
+function pastedImage(file: File) {
+  if (file.name && !/^image(?:\.[^.]*)?$/i.test(file.name)) return file;
+  const extension =
+    file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
+  return new File([file], `Pasted image.${extension}`, {
+    type: file.type,
+    lastModified: file.lastModified,
+  });
+}
+
 export function GenerationBar({ studio }: { studio: StudioState }) {
   const [provider, setProvider] = useState<"procedural" | "local">(
     "procedural",
   );
   const [count, setCount] = useState(4);
+  const [dragDepth, setDragDepth] = useState(0);
+  const [referenceNotice, setReferenceNotice] = useState("");
   useEffect(() => {
     if (studio.referenceUrl) setProvider("local");
   }, [studio.referenceUrl]);
@@ -17,6 +36,8 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
   const archived = studio.selectedBrand?.status === "archived";
   const unavailable = provider === "local" && !studio.providerHealth.available;
   const inputDisabled = !studio.selectedBrand || studio.busy || archived;
+  const referenceDisabled = inputDisabled || studio.referenceLoading;
+  const dropActive = !referenceDisabled && dragDepth > 0;
   const canGenerate =
     !inputDisabled &&
     !unavailable &&
@@ -54,18 +75,72 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
   return (
     <section className="generation-area" aria-label="Generate concepts">
       <form
-        className="prompt-composer"
+        className={`prompt-composer${dropActive ? " reference-drop-active" : ""}`}
+        onPaste={(event) => {
+          if (referenceDisabled) return;
+          const images = Array.from(event.clipboardData.items)
+            .filter(
+              (item) => item.kind === "file" && item.type.startsWith("image/"),
+            )
+            .map((item) => item.getAsFile())
+            .filter((file): file is File => file !== null);
+          if (!images.length) return;
+          event.preventDefault();
+          setReferenceNotice(
+            images.length > 1
+              ? "Only one reference is used. Taking the first image."
+              : "",
+          );
+          void studio.importReference(pastedImage(images[0]));
+        }}
+        onDragEnter={(event) => {
+          if (referenceDisabled || !isFileDrag(event.dataTransfer)) return;
+          event.preventDefault();
+          setDragDepth((depth) => depth + 1);
+        }}
+        onDragOver={(event) => {
+          if (referenceDisabled || !isFileDrag(event.dataTransfer)) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "copy";
+        }}
+        onDragLeave={() => setDragDepth((depth) => Math.max(0, depth - 1))}
+        onDrop={(event) => {
+          setDragDepth(0);
+          if (referenceDisabled || !isFileDrag(event.dataTransfer)) return;
+          const files = Array.from(event.dataTransfer.files);
+          if (!files.length) return;
+          event.preventDefault();
+          setReferenceNotice(
+            files.length > 1
+              ? "Only one reference is used. Taking the first file."
+              : "",
+          );
+          // Keep all file validation (including unsupported types) in the application action.
+          void studio.importReference(files[0]);
+        }}
         onSubmit={(event) => {
           event.preventDefault();
           generate();
         }}
       >
+        <div
+          className={
+            dropActive
+              ? "reference-drop-hint"
+              : referenceNotice
+                ? "reference-input-notice"
+                : "visually-hidden"
+          }
+          role="status"
+        >
+          {dropActive ? "Drop image to use as reference" : referenceNotice}
+        </div>
         {studio.referenceUrl && (
           <ReferenceCard
             url={studio.referenceUrl}
             info={studio.referenceInfo}
             theme={studio.theme}
-            disabled={inputDisabled || studio.referenceLoading}
+            disabled={referenceDisabled}
             active={provider === "local"}
             onReplace={() => fileInput.current?.click()}
             onRemove={studio.clearReference}
@@ -108,10 +183,11 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
               accept="image/png,image/jpeg,image/webp"
               hidden
               tabIndex={-1}
-              disabled={inputDisabled || studio.referenceLoading}
+              disabled={referenceDisabled}
               aria-label="Reference image"
               onChange={(event) => {
                 const file = event.target.files?.[0];
+                setReferenceNotice("");
                 if (file) void studio.importReference(file);
                 event.target.value = "";
               }}
@@ -119,7 +195,7 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
             <IconButton
               label="Add reference image"
               onClick={() => fileInput.current?.click()}
-              disabled={inputDisabled || studio.referenceLoading}
+              disabled={referenceDisabled}
             >
               <ImagePlus size={17} />
             </IconButton>
@@ -240,6 +316,7 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
                 ? "Editable geometric explorations · no AI model used"
                 : "Local generation · your files stay on this device"}
             </span>
+            <span>Paste or drop an image as reference</span>
             <kbd>{shortcutModifier} Enter</kbd>
           </>
         )}
