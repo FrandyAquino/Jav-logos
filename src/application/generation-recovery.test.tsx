@@ -7,6 +7,14 @@ vi.mock("../infrastructure/desktop", async (importOriginal) => {
     await importOriginal<typeof import("../infrastructure/desktop")>();
   return {
     ...original,
+    generate: async (request: { count: number }) => ({
+      provider: "Test boundary",
+      images: Array.from({ length: request.count }, (_, seed) => ({
+        seed,
+        pngBase64:
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nksAAAAASUVORK5CYII=",
+      })),
+    }),
     saveWorkspace: async (
       ...args: Parameters<typeof original.saveWorkspace>
     ) => {
@@ -25,7 +33,7 @@ it("retains completed generation on a failed save and retries without generating
   });
   storage.fail = true;
   await act(async () => {
-    await result.current.generate("procedural", 2);
+    await result.current.generate("local", 2);
   });
   expect(result.current.workspace.concepts).toHaveLength(0);
   expect(result.current.pendingConcepts).toHaveLength(2);
@@ -41,6 +49,7 @@ it("retains completed generation on a failed save and retries without generating
   });
   expect(result.current.workspace.concepts.map((c) => c.id)).toEqual(ids);
   expect(result.current.pendingConcepts).toHaveLength(0);
+  expect(result.current.generationProgress?.phase).toBe("completed");
   const safeClose = new Event("beforeunload", { cancelable: true });
   act(() => {
     window.dispatchEvent(safeClose);

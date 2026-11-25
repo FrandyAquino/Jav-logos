@@ -4,6 +4,7 @@ import { sanitizeSvg } from "./svg";
 import type {
   GenerationRequest,
   GenerationResult,
+  GenerationProgress,
   ProviderHealth,
   Workspace,
 } from "../domain/types";
@@ -92,6 +93,11 @@ export async function generate(
 }
 export async function cancel(jobId: string): Promise<boolean> {
   return native ? invoke("cancel_generation", { jobId }) : false;
+}
+export async function generationProgress(
+  jobId: string,
+): Promise<GenerationProgress | null> {
+  return native ? invoke("generation_progress", { jobId }) : null;
 }
 export async function vectorize(pngBase64: string): Promise<string> {
   if (!native) throw new Error("Vector tracing requires the desktop worker.");

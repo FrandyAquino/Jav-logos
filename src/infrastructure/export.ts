@@ -1,6 +1,6 @@
 import { strToU8, zipSync } from "fflate";
 import { resolveDna } from "../domain/brand-dna";
-import { renderSvg } from "../domain/vector";
+import { prepareCompositionSvg, fontLicense } from "./font-export";
 import type { Workspace } from "../domain/types";
 import { sanitizeSvg } from "./svg";
 export async function rasterize(svg: string): Promise<Uint8Array> {
@@ -51,7 +51,7 @@ export async function buildKit(
       `:root {\n${dna.palette.map((c, i) => `  --brand-color-${i + 1}: ${c};`).join("\n")}\n}`,
     ),
     "README.txt": strToU8(
-      `${brand.name} — JavLogos brand kit\nTypography: ${dna.typography}\nTone: ${dna.tone}\nSVG text remains editable and depends on installed fonts. Fonts are not bundled or outlined. Original AI images and vector studies have distinct provenance in brand.json.\n`,
+      `${brand.name} — JavLogos brand kit\nTypography: ${dna.typography}\nTone: ${dna.tone}\nSVG text remains editable. Bundled open fonts are embedded with license metadata; system fonts still require installation. Fonts are not outlined. Original AI images and vector studies have distinct provenance in brand.json.\n`,
     ),
   };
   for (const [index, concept] of concepts.entries()) {
@@ -68,9 +68,18 @@ export async function buildKit(
       );
     if (concept.tracedSvg)
       files[`${prefix}-trace.svg`] = strToU8(sanitizeSvg(concept.tracedSvg));
-    const svg = renderSvg(concept.document);
+    const svg = await prepareCompositionSvg(concept.document);
     files[`${prefix}-composition.svg`] = strToU8(svg);
     files[`${prefix}-composition.png`] = await rasterize(svg);
+  }
+  for (const family of new Set([
+    dna.typography,
+    ...concepts.map((c) => c.document.fontFamily),
+  ])) {
+    const license = await fontLicense(family);
+    if (license)
+      files[`licenses/${family.replace(/[^a-zA-Z0-9-]/g, "-")}.txt`] =
+        strToU8(license);
   }
   return zipSync(files, { level: 6 });
 }

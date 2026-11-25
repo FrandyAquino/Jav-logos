@@ -25,6 +25,7 @@ import { CreativeCanvas } from "./creative-canvas";
 import { Inspector } from "./inspector";
 import { IconButton, Mark, shortcutModifier } from "./ui";
 import { CommandPalette, type StudioCommand } from "./command-palette";
+import { SelectField } from "./select-field";
 
 export function Studio() {
   const studio = useStudio();
@@ -425,21 +426,22 @@ export function Studio() {
                   onChange={(event) => setNewName(event.target.value)}
                 />
               </label>
-              <label className="dialog-field">
-                Brand family
-                <select
+              <div className="dialog-field">
+                <span>Brand family</span>
+                <SelectField
+                  label="Brand family"
                   disabled={creating}
                   value={parentId}
-                  onChange={(event) => setParentId(event.target.value)}
-                >
-                  <option value="">Independent parent brand</option>
-                  {studio.workspace.brands.map((brand) => (
-                    <option value={brand.id} key={brand.id}>
-                      Inherit from {brand.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onValueChange={setParentId}
+                  options={[
+                    { value: "", label: "Independent parent brand" },
+                    ...studio.workspace.brands.map((brand) => ({
+                      value: brand.id,
+                      label: `Inherit from ${brand.name}`,
+                    })),
+                  ]}
+                />
+              </div>
               {createFailed && (
                 <p className="dialog-error" role="alert">
                   {studio.error ||

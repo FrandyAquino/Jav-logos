@@ -10,15 +10,15 @@ Local inference uses existing GGUF weights through stable-diffusion.cpp Metal. T
 
 | Executed check | Result |
 | --- | --- |
-| TypeScript tests | 14 passed |
-| Rust tests | 15 passed |
-| Python tests | 9 passed |
-| Browser end-to-end tests | 6 passed after UI refinement |
+| TypeScript tests | 18 passed after workflow update |
+| Rust tests | 21 passed after workflow update |
+| Python tests | 11 passed after workflow update |
+| Browser end-to-end tests | 9 Chromium flows; targeted font export also passed in WebKit |
 | Typecheck, ESLint, Vite production build | Passed |
 | Rust clippy with warnings denied and formatting | Passed |
 | npm production dependency audit | 0 reported vulnerabilities |
 | Repository SKILL.md validations | Initial12 passed; new studio-ui-polish skill also passed |
-| macOS debug .app bundle | Passed, approximately30.50MiB after UI refinement |
+| macOS debug .app bundle | Passed, approximately31.30MiB after workflow update |
 | Native generation, tracing, export and restart | Passed; see native-acceptance.md |
 | Windows/Linux native runtime and remote CI | Unrun |
 
@@ -44,3 +44,7 @@ This is a functional development build, **not a production-certified cross-platf
 Workspace snapshots load assets into memory and retain unreferenced asset files after failures; large-workspace profiling, lazy asset loading and safe garbage collection remain future work. Recovery copies protect completed batches after save failures; forced app termination/power loss during unsaved work has not been certified. The frontend close guard covers window-close handling; platform menu-quit behavior with an unsaved recovery batch still needs native acceptance, and operating-system force quit is outside that guard.
 
 No repository remote was configured, no PR was published, and CI jobs have not run remotely. The app remains open with clearly named native QA data for inspection. Local runtime configuration, model files, databases and generated evidence are ignored by Git.
+
+## Workspace workflow continuation
+
+See `workspace-workflow.md` for custom controls, brand lifecycle/pinning, attachments, fonts and live generation diagnostics. Real native two-image512px generation was observed with steps/logs and saved successfully; native font-export/dialog follow-up remains unverified after computer-use lost the window.

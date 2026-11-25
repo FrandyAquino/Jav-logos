@@ -1,7 +1,9 @@
 import { Dna, Link2, RotateCcw } from "lucide-react";
 import type { BrandDna, ShapeKind } from "../domain/types";
-import { Field, fonts, shapes, type StudioState } from "./ui";
+import { Field, shapes, type StudioState } from "./ui";
 import { ColorField, TextField } from "./property-fields";
+import { FontPicker } from "./font-picker";
+import { SelectField } from "./select-field";
 export function DnaInspector({ studio }: { studio: StudioState }) {
   const brand = studio.selectedBrand;
   if (!brand)
@@ -89,17 +91,11 @@ export function DnaInspector({ studio }: { studio: StudioState }) {
       </div>
       <div className="inspector-section">
         <Field label="Typography" hint={source("typography")}>
-          <select
-            aria-label="Brand typography"
+          <FontPicker
+            label="Brand typography"
             value={dna.typography}
-            onChange={(event) =>
-              studio.updateDna({ typography: event.target.value })
-            }
-          >
-            {fonts.map((font) => (
-              <option key={font}>{font}</option>
-            ))}
-          </select>
+            onValueChange={(typography) => studio.updateDna({ typography })}
+          />
         </Field>
         <div className="type-specimen" style={{ fontFamily: dna.typography }}>
           <span>Aa</span>
@@ -115,19 +111,17 @@ export function DnaInspector({ studio }: { studio: StudioState }) {
       </div>
       <div className="inspector-section">
         <Field label="Signature geometry" hint={source("geometry")}>
-          <select
-            aria-label="Brand geometry"
+          <SelectField
+            label="Brand geometry"
             value={dna.geometry}
-            onChange={(event) =>
-              studio.updateDna({ geometry: event.target.value as ShapeKind })
+            onValueChange={(geometry) =>
+              studio.updateDna({ geometry: geometry as ShapeKind })
             }
-          >
-            {shapes.map((shape) => (
-              <option key={shape} value={shape}>
-                {shape[0].toUpperCase() + shape.slice(1)}
-              </option>
-            ))}
-          </select>
+            options={shapes.map((shape) => ({
+              value: shape,
+              label: shape[0].toUpperCase() + shape.slice(1),
+            }))}
+          />
         </Field>
         <Field label="Brand personality" hint={source("tone")}>
           <TextField

@@ -10,6 +10,7 @@ Frontend source of shared types: `src/domain/types.ts`. A Workspace has `schemaV
 - `provider_health()` → `{available:boolean,provider:string,message:string}`.
 - `generate_images({request:{jobId:string,prompt:string,seed:number,count:number,width:number,height:number,referenceBase64?:string}})` → `{images:[{pngBase64:string,seed:number}],provider:string}`.
 - `cancel_generation({jobId:string})` → boolean; cancel only the matching owned process.
+- `generation_progress({jobId:string})` → matching bounded job snapshot or null; see `docs/planning/workspace-workflow.md` for fields and phases.
 - `vectorize_image({pngBase64:string})` → SVG string (bounded, sanitized again on frontend).
 - `export_file({suggestedName:string,bytes:number[]})` → saved path or null; Rust owns native save dialog; cancellation must not write.
 
@@ -18,3 +19,7 @@ Generation is async in Rust; worker executable/config is resolved from trusted l
 No arbitrary raw SVG inline rendering. Domain emits safe SVG from typed primitives; imported/vectorized SVG is sanitized with a strict element/attribute allowlist and displayed in an image sandbox. Version edits copy values. User output paths are selected through native dialog. Generation results that fail persistence remain in memory with retry/save-recovery actions; recovery JSON imports merge IDs without overwriting existing identities. Exports and generation await prior queued writes.
 
 Application API for presentation: `useStudio()` returns workspace, selectedBrand, selectedConcept, resolvedDna, status, error, busy, providerHealth, theme, plus selectBrand, selectConcept, createBrand(name,parentId?), updateDna(patch), updateBrandName(name), setPrompt(prompt), prompt, generate(provider:'procedural'|'local',count), cancelGeneration, updateConcept(patch), saveVersion, restoreVersion(id), exportKit, exportSvg, exportPng, importReference(file), referenceUrl, clearReference, refreshProvider, dismissError, setTheme. All mutating async actions expose errors; autosave serializes writes. See types for patch shapes.
+
+## Library and typography additions
+
+Brands accept optional status/pinned/order/icon fields; absent values preserve legacy active/unpinned behavior. Archive is reversible and does not delete descendants. Font names are shared by TypeScript/Rust via `shared/font-families.json`; approved font assets/licenses are indexed in `shared/font-assets.json`. Only typed primitive compositions render inline; untrusted traces remain sanitized image sources. Trusted composition exports embed approved font data and licenses.

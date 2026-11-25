@@ -337,6 +337,10 @@ mod tests {
             name: "Brand".into(),
             parent_id: Some("brand-a".into()),
             created_at: "2026-11-25".into(),
+            status: None,
+            pinned: None,
+            order: None,
+            icon: None,
             dna: crate::model::Dna {
                 palette: None,
                 typography: None,
@@ -355,9 +359,9 @@ mod tests {
         let png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nksAAAAASUVORK5CYII=";
         let input = serde_json::json!({
             "schemaVersion":1,"revision":0,
-            "brands":[{"id":"brand-a","name":"Brand","parentId":null,"dna":{},"createdAt":"2026-11-25"}],
+            "brands":[{"id":"brand-a","name":"Brand","parentId":null,"dna":{},"createdAt":"2026-11-25","status":"completed","pinned":true,"order":2,"icon":"spark"}],
             "concepts":[{"id":"concept-a","brandId":"brand-a","name":"Concept","prompt":"Test","provider":"test","seed":42,"createdAt":"2026-11-25",
-                "document":{"shape":"orbit","text":"Brand","primary":"#112233","background":"#ffffff","fontFamily":"Inter","scale":1,"rotation":0,"letterSpacing":0,"strokeWidth":2},
+                "document":{"shape":"orbit","text":"Brand","primary":"#112233","background":"#ffffff","fontFamily":"Manrope","scale":1,"rotation":0,"letterSpacing":0,"strokeWidth":2},
                 "raster":png,"reference":png,"tracedSvg":"<svg xmlns=\"http://www.w3.org/2000/svg\"/>","versions":[],
                 "generationContext":{"effectivePrompt":"A blue geometric logo","width":512,"height":512,"dna":{"palette":["#112233"],"typography":"Inter","geometry":"orbit","tone":"Calm"}}}]
         });
@@ -365,6 +369,10 @@ mod tests {
             .save(serde_json::from_value(input).unwrap(), 0)
             .unwrap();
         let snapshot = store.load().unwrap().snapshot.unwrap();
+        assert_eq!(snapshot.brands[0].status.as_deref(), Some("completed"));
+        assert_eq!(snapshot.brands[0].pinned, Some(true));
+        assert_eq!(snapshot.brands[0].icon.as_deref(), Some("spark"));
+        assert_eq!(snapshot.concepts[0].document.font_family, "Manrope");
         assert_eq!(snapshot.concepts[0].raster.as_deref(), Some(png));
         assert_eq!(snapshot.concepts[0].reference.as_deref(), Some(png));
         assert_eq!(

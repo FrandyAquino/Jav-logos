@@ -5,6 +5,7 @@ import importlib.util
 from pathlib import Path
 
 from common import WorkerError, decode_image, encode_png
+from progress import emit, image_ready
 
 
 class DiffusersProvider:
@@ -27,6 +28,7 @@ class DiffusersProvider:
         from diffusers import Flux2KleinPipeline
         device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
         dtype = torch.bfloat16 if device in {"cuda", "mps"} else torch.float32
+        emit("loading", f"Loading the local Diffusers pipeline on {device}", imageIndex=1, imageCount=request["count"])
         pipe = Flux2KleinPipeline.from_pretrained(self.values["diffusers_model"], torch_dtype=dtype, local_files_only=True)
         if device == "cuda":
             pipe.enable_model_cpu_offload()
@@ -37,11 +39,17 @@ class DiffusersProvider:
         images = []
         for index in range(request["count"]):
             seed = request["seed"] + index
+            emit("encoding", "Encoding the description and reference", imageIndex=index+1, imageCount=request["count"])
+            def step_finished(_pipeline, step_index, _timestep, callback_kwargs):
+                emit("sampling", f"Sampling step {step_index+1} of 4", imageIndex=index+1, imageCount=request["count"], step=step_index+1, steps=4)
+                return callback_kwargs
             options = {"prompt": request["prompt"], "width": request["width"], "height": request["height"],
                        "num_inference_steps": 4, "guidance_scale": 1.0,
-                       "generator": torch.Generator(device="cpu").manual_seed(seed)}
+                       "generator": torch.Generator(device="cpu").manual_seed(seed),
+                       "callback_on_step_end": step_finished}
             if reference is not None:
                 options["image"] = reference
             image = pipe(**options).images[0]
             images.append({"pngBase64": encode_png(image), "seed": seed})
+            image_ready(image,index+1,request["count"])
         return {"images": images, "provider": self.name}

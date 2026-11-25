@@ -11,8 +11,10 @@ import {
 } from "lucide-react";
 import { analyzeConsistency } from "../domain/brand-dna";
 import type { ShapeKind } from "../domain/types";
-import { Field, fonts, shapes, type StudioState } from "./ui";
+import { Field, shapes, type StudioState } from "./ui";
 import { ColorField, TextField, RangeField } from "./property-fields";
+import { FontPicker } from "./font-picker";
+import { SelectField } from "./select-field";
 export function ConceptInspector({ studio }: { studio: StudioState }) {
   const concept = studio.selectedConcept;
   const [versionsOpen, setVersionsOpen] = useState(false);
@@ -44,19 +46,17 @@ export function ConceptInspector({ studio }: { studio: StudioState }) {
           </p>
         )}
         <Field label="Symbol">
-          <select
-            aria-label="Logo symbol"
+          <SelectField
+            label="Logo symbol"
             value={document.shape}
-            onChange={(event) =>
-              studio.updateConcept({ shape: event.target.value as ShapeKind })
+            onValueChange={(shape) =>
+              studio.updateConcept({ shape: shape as ShapeKind })
             }
-          >
-            {shapes.map((shape) => (
-              <option key={shape} value={shape}>
-                {shape[0].toUpperCase() + shape.slice(1)}
-              </option>
-            ))}
-          </select>
+            options={shapes.map((shape) => ({
+              value: shape,
+              label: shape[0].toUpperCase() + shape.slice(1),
+            }))}
+          />
         </Field>
         <Field label="Wordmark">
           <TextField
@@ -67,17 +67,11 @@ export function ConceptInspector({ studio }: { studio: StudioState }) {
           />
         </Field>
         <Field label="Typeface">
-          <select
-            aria-label="Logo typeface"
+          <FontPicker
+            label="Logo typeface"
             value={document.fontFamily}
-            onChange={(event) =>
-              studio.updateConcept({ fontFamily: event.target.value })
-            }
-          >
-            {fonts.map((font) => (
-              <option key={font}>{font}</option>
-            ))}
-          </select>
+            onValueChange={(fontFamily) => studio.updateConcept({ fontFamily })}
+          />
         </Field>
         <ColorField
           label="Logo"

@@ -10,6 +10,7 @@ import urllib.request
 import uuid
 
 from common import MAX_IMAGE_BYTES, WorkerError, decode_image, encode_png, require_file
+from progress import emit, image_ready
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -86,6 +87,7 @@ class ComfyUiProvider:
             if not isinstance(prompt_id, str):
                 raise WorkerError("ComfyUI rejected the workflow; verify model nodes and filenames.", "WORKFLOW_INVALID")
             completed = False
+            emit("starting", "Workflow submitted to local ComfyUI; waiting for its result", imageIndex=index+1, imageCount=request["count"])
             try:
                 deadline = time.monotonic() + 840
                 while time.monotonic() < deadline:
@@ -99,7 +101,9 @@ class ComfyUiProvider:
                             raise WorkerError("ComfyUI workflow returned no image output.", "INFERENCE_FAILED")
                         query = urllib.parse.urlencode({key: outputs[0][key] for key in ["filename", "subfolder", "type"] if key in outputs[0]})
                         data = self.request("/view?" + query, raw=True)
-                        images.append({"pngBase64": encode_png(decode_image(base64.b64encode(data).decode())), "seed": request["seed"] + index})
+                        image=decode_image(base64.b64encode(data).decode())
+                        images.append({"pngBase64": encode_png(image), "seed": request["seed"] + index})
+                        image_ready(image,index+1,request["count"])
                         completed = True
                         break
                     time.sleep(0.5)

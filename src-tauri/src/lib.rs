@@ -1,9 +1,12 @@
 mod error;
+#[path = "generation-progress.rs"]
+mod generation_progress;
 mod model;
 mod storage;
 mod worker;
 
 use error::{AppError, AppResult};
+use generation_progress::GenerationProgress;
 use model::Workspace;
 use storage::{LoadedWorkspace, Store};
 use tauri::{AppHandle, Manager, State};
@@ -58,6 +61,14 @@ async fn generate_images(
 #[tauri::command]
 fn cancel_generation(state: State<'_, WorkerManager>, job_id: String) -> AppResult<bool> {
     state.cancel(&job_id)
+}
+
+#[tauri::command]
+fn generation_progress(
+    state: State<'_, WorkerManager>,
+    job_id: String,
+) -> AppResult<Option<GenerationProgress>> {
+    state.progress(&job_id)
 }
 
 #[tauri::command]
@@ -131,6 +142,7 @@ pub fn run() {
             provider_health,
             generate_images,
             cancel_generation,
+            generation_progress,
             vectorize_image,
             export_file
         ])

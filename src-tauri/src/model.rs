@@ -19,6 +19,14 @@ pub struct Brand {
     pub parent_id: Option<String>,
     pub dna: Dna,
     pub created_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub status: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pinned: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub order: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub icon: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -150,16 +158,12 @@ impl VectorDocument {
 }
 
 fn validate_font(font: &str) -> AppResult<()> {
-    if ![
-        "Inter",
-        "Avenir Next",
-        "Georgia",
-        "Helvetica Neue",
-        "Courier New",
-        "system-ui",
-    ]
-    .contains(&font)
-    {
+    static FONTS: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
+    let fonts = FONTS.get_or_init(|| {
+        serde_json::from_str(include_str!("../../shared/font-families.json"))
+            .expect("valid bundled font catalogue")
+    });
+    if !fonts.iter().any(|family| family == font) {
         return Err(AppError::invalid("Unsupported typography"));
     }
     Ok(())
@@ -205,6 +209,21 @@ impl Workspace {
             }
             bounded(&brand.created_at, 64, "Creation date")?;
             brand.dna.validate()?;
+            if brand
+                .status
+                .as_deref()
+                .is_some_and(|v| !["active", "completed", "archived"].contains(&v))
+                || brand.order.is_some_and(|v| v > 1_000_000)
+                || brand.icon.as_deref().is_some_and(|v| {
+                    ![
+                        "diamond", "orbit", "flower", "type", "triangle", "waves", "grid",
+                        "layers", "spark",
+                    ]
+                    .contains(&v)
+                })
+            {
+                return Err(AppError::invalid("Invalid brand organization metadata"));
+            }
             parents.insert(&brand.id, &brand.parent_id);
         }
         for brand in &self.brands {

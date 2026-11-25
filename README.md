@@ -29,7 +29,10 @@ The macOS development app is at `src-tauri/target/debug/bundle/macos/JavLogos.ap
 2. Add a sub-brand to inherit those rules. Override a field or reset it to inheritance.
 3. Describe a logo and generate 1–4 concepts. Choose **Geometric concepts** for editable procedural studies or **Local AI · FLUX** for actual model inference. A visual reference applies to local AI.
 4. Inspect the original AI image, trace it to SVG, or edit the separate geometric composition. Save composition versions before exploring changes.
-5. Export composition SVG/PNG, traced SVG, or a ZIP brand kit with original imagery, vector assets, palette and provenance.
+5. Export composition SVG/PNG, traced SVG, or a ZIP brand kit with original imagery, vector assets, palette and provenance. Bundled open fonts are embedded in composition SVG; system fonts still require installation.
+6. Use each brand’s menu to rename, complete, archive/restore or pin it. Drag a brand into Pinned or use Move up/down to reorder.
+
+Local generation now shows actual worker stages, current image, sampling steps when reported, elapsed time and bounded logs. The runtime loads models once per batch. Refine image reuses the selected raster/prompt as the next reference.
 
 If generation finishes but saving fails, keep the window open and choose **Retry save** or **Export recovery copy**. Import that JSON later through the command palette. Recovery import preserves concept IDs and does not rerun inference. Existing IDs are retained rather than overwritten.
 

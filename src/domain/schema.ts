@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { validateHierarchy } from "./brand-dna";
+import fontFamilies from "../../shared/font-families.json";
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 const identifier = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
 const png = z
@@ -7,14 +8,28 @@ const png = z
   .max(16_000_000)
   .regex(/^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/);
 const shape = z.enum(["orbit", "petal", "monogram", "prism", "wave", "grid"]);
-const font = z.enum([
-  "Inter",
-  "Avenir Next",
-  "Georgia",
-  "Helvetica Neue",
-  "Courier New",
-  "system-ui",
-]);
+const font = z
+  .string()
+  .refine((value) => fontFamilies.includes(value), "Unsupported typography");
+export const brandMetadataSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120),
+    status: z.enum(["active", "completed", "archived"]),
+    pinned: z.boolean(),
+    order: z.number().int().min(0).max(1_000_000),
+    icon: z.enum([
+      "diamond",
+      "orbit",
+      "flower",
+      "type",
+      "triangle",
+      "waves",
+      "grid",
+      "layers",
+      "spark",
+    ]),
+  })
+  .partial();
 export const dnaSchema = z.object({
   palette: z.array(color).min(1).max(8),
   typography: font,
@@ -71,6 +86,22 @@ export const workspaceSchema = z
           parentId: identifier.nullable(),
           dna: dnaSchema.partial(),
           createdAt: z.string().max(64),
+          status: z.enum(["active", "completed", "archived"]).optional(),
+          pinned: z.boolean().optional(),
+          order: z.number().int().min(0).max(1_000_000).optional(),
+          icon: z
+            .enum([
+              "diamond",
+              "orbit",
+              "flower",
+              "type",
+              "triangle",
+              "waves",
+              "grid",
+              "layers",
+              "spark",
+            ])
+            .optional(),
         }),
       )
       .max(1000),

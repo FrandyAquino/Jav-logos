@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { chooseOption } from "./controls";
 import { readFile } from "node:fs/promises";
 import { unzipSync, strFromU8 } from "fflate";
 test("brand inheritance, editable concepts, version recovery and exported kit survive reload", async ({
@@ -19,14 +20,16 @@ test("brand inheritance, editable concepts, version recovery and exported kit su
   await expect(page.getByRole("navigation", { name: "Brands" })).toContainText(
     "JavCollections",
   );
-  await page.getByLabel("Brand typography").selectOption("Georgia");
+  await chooseOption(page, "Brand typography", "Georgia");
   await page.getByRole("button", { name: "Add sub-brand" }).click();
   await page.getByRole("dialog").getByLabel("Brand name").fill("JavLogos");
   await page
     .getByRole("dialog")
     .getByRole("button", { name: "Create brand", exact: true })
     .click();
-  await expect(page.getByLabel("Brand typography")).toHaveValue("Georgia");
+  await expect(
+    page.getByRole("combobox", { name: "Brand typography" }),
+  ).toContainText("Georgia");
   await page.getByRole("button", { name: "Generate", exact: true }).click();
   await expect(
     page.getByRole("button", { name: /Select .* study/ }),
@@ -64,7 +67,7 @@ test("brand inheritance, editable concepts, version recovery and exported kit su
   await page.reload();
   await page
     .getByRole("navigation", { name: "Brands" })
-    .getByRole("button", { name: /J JavLogos/ })
+    .getByRole("button", { name: "Open JavLogos", exact: true })
     .click();
   await expect(
     page.getByRole("button", { name: /Select .* study/ }),
@@ -134,7 +137,7 @@ test("failed generation save can be exported and imported without rerunning gene
       original.call(this, key, value);
     };
   });
-  await page.getByLabel("Number of concepts").selectOption("2");
+  await chooseOption(page, "Number of concepts", "2 concepts");
   await page.getByRole("button", { name: "Generate", exact: true }).click();
   await expect(
     page.getByText("2 generated concepts are waiting to save.", {
@@ -153,13 +156,11 @@ test("failed generation save can be exported and imported without rerunning gene
   expect(recovery.concepts[0].generationContext.dna).toBeDefined();
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page
-    .getByLabel("Recovery copy", { exact: true })
-    .setInputFiles({
-      name: "recovery.json",
-      mimeType: "application/json",
-      buffer: bytes,
-    });
+  await page.getByLabel("Recovery copy", { exact: true }).setInputFiles({
+    name: "recovery.json",
+    mimeType: "application/json",
+    buffer: bytes,
+  });
   await expect(
     page.getByRole("button", { name: /Select .* study/ }),
   ).toHaveCount(2);

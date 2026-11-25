@@ -4,6 +4,8 @@
 @import "./canvas.css";
 @import "./inspector.css";
 @import "./dialogs.css";
+@import "./controls.css";
+@import "./library.css";
 
 :root {
   font-family: var(--font-ui, "Google Sans Flex", system-ui, sans-serif);

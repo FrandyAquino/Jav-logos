@@ -10,6 +10,7 @@ import tempfile
 from pathlib import Path
 
 from common import MAX_INPUT_BYTES, WorkerError, config, decode_image, validate_generation
+from progress import emit
 
 
 def provider():
@@ -36,6 +37,7 @@ def run_command(command: str, request: dict):
             return {"available": False, "provider": "Local image generation", "message": str(error)}
     if command == "generate":
         validate_generation(request)
+        emit("starting", "Request validated; preparing local generation", imageIndex=1, imageCount=request["count"])
         return provider().generate(request)
     if command == "vectorize":
         try:

@@ -1,10 +1,19 @@
 import { useEffect, useMemo } from "react";
 import { create } from "zustand";
 import { DEFAULT_DNA, buildPrompt, resolveDna } from "../domain/brand-dna";
-import { generateConcepts, renderSvg } from "../domain/vector";
-import { dnaSchema, documentSchema, workspaceSchema } from "../domain/schema";
+import { generateConcepts } from "../domain/vector";
+import {
+  dnaSchema,
+  documentSchema,
+  workspaceSchema,
+  brandMetadataSchema,
+} from "../domain/schema";
+import { reorderPinned } from "../domain/brand-library";
+import { startGenerationMonitor } from "./generation-monitor";
 import type {
   BrandDna,
+  Brand,
+  GenerationProgress,
   Concept,
   ProviderHealth,
   VectorDocument,
@@ -13,6 +22,7 @@ import type {
 import * as desktop from "../infrastructure/desktop";
 import { buildKit, rasterize } from "../infrastructure/export";
 import { sanitizeSvg } from "../infrastructure/svg";
+import { prepareCompositionSvg } from "../infrastructure/font-export";
 
 interface StudioState {
   workspace: Workspace;
@@ -27,6 +37,17 @@ interface StudioState {
   providerHealth: ProviderHealth;
   theme: "light" | "dark";
   referenceUrl: string | null;
+  referenceInfo: {
+    name: string;
+    width: number;
+    height: number;
+    size: number;
+  } | null;
+  referenceLoading: boolean;
+  generationProgress: GenerationProgress | null;
+  generationStartedAt: number | null;
+  generationBrandId: string | null;
+  generationBrandName: string | null;
   pendingConcepts: Concept[];
   pendingRecoveryExported: boolean;
 }
@@ -47,6 +68,12 @@ const useState = create<StudioState>(() => ({
   },
   theme: localStorage.getItem("javlogos.theme") === "light" ? "light" : "dark",
   referenceUrl: null,
+  referenceInfo: null,
+  referenceLoading: false,
+  generationProgress: null,
+  generationStartedAt: null,
+  generationBrandId: null,
+  generationBrandName: null,
   pendingConcepts: [],
   pendingRecoveryExported: false,
 }));
@@ -58,6 +85,30 @@ let writeError: unknown = null;
 let pendingWrites = 0;
 let referenceSequence = 0;
 let activeJob: string | null = null;
+let stopGenerationMonitor = () => {};
+function monitorGeneration(jobId: string) {
+  stopGenerationMonitor();
+  stopGenerationMonitor = startGenerationMonitor(
+    jobId,
+    desktop.generationProgress,
+    (value) => set({ generationProgress: value }),
+    () => activeJob === jobId,
+  );
+}
+function progressPhase(phase: GenerationProgress["phase"], message: string) {
+  const progress = get().generationProgress;
+  if (!progress) return;
+  const now = Date.now();
+  set({
+    generationProgress: {
+      ...progress,
+      phase,
+      message,
+      updatedAt: now,
+      logs: [...progress.logs, { at: now, message }].slice(-80),
+    },
+  });
+}
 const fail = (error: unknown) =>
   set({ error: desktop.message(error), status: "Action failed" });
 async function initialize() {
@@ -65,12 +116,15 @@ async function initialize() {
     const loaded = await desktop.loadWorkspace();
     const workspace = loaded.snapshot || get().workspace;
     workspace.revision = loaded.revision;
+    const firstBrand =
+      workspace.brands.find((b) => b.status !== "archived") ??
+      workspace.brands[0];
     set({
       workspace,
-      selectedBrandId: workspace.brands[0]?.id || null,
+      selectedBrandId: firstBrand?.id || null,
       selectedConceptId:
-        workspace.concepts.find((c) => c.brandId === workspace.brands[0]?.id)
-          ?.id || null,
+        workspace.concepts.find((c) => c.brandId === firstBrand?.id)?.id ||
+        null,
       ready: true,
       status: desktop.native
         ? "Saved on this device"
@@ -188,6 +242,46 @@ const actions = {
       ),
     }));
   },
+  async updateBrand(
+    id: string,
+    patch: Partial<Pick<Brand, "name" | "status" | "icon">>,
+  ): Promise<boolean> {
+    let success = false;
+    await guarded(async () => {
+      const metadata = brandMetadataSchema.parse(patch);
+      success = await persist((w) => {
+        if (!w.brands.some((b) => b.id === id))
+          throw new Error("Brand not found.");
+        return {
+          ...w,
+          brands: w.brands.map((b) =>
+            b.id === id
+              ? {
+                  ...b,
+                  ...metadata,
+                  ...(metadata.status === "archived" ? { pinned: false } : {}),
+                }
+              : b,
+          ),
+        };
+      });
+    });
+    return success;
+  },
+  async pinBrand(id: string, pinned: boolean) {
+    await persist((w) => ({
+      ...w,
+      brands: pinned
+        ? reorderPinned(w.brands, id)
+        : w.brands.map((b) => (b.id === id ? { ...b, pinned: false } : b)),
+    }));
+  },
+  async reorderPinnedBrand(id: string, beforeId?: string) {
+    await persist((w) => ({
+      ...w,
+      brands: reorderPinned(w.brands, id, beforeId),
+    }));
+  },
   async updateDna(patch: Partial<BrandDna>) {
     const id = get().selectedBrandId;
     await guarded(async () => {
@@ -216,7 +310,7 @@ const actions = {
     set({ prompt: prompt.slice(0, 3000) });
   },
   async generate(provider: "procedural" | "local", count: number) {
-    if (get().busy) return;
+    if (get().busy || get().referenceLoading) return;
     if (get().pendingConcepts.length) {
       fail(
         new Error("Save or export the pending batch before generating again."),
@@ -230,6 +324,22 @@ const actions = {
       busy: true,
       cancellable: true,
       error: null,
+      generationStartedAt: provider === "local" ? Date.now() : null,
+      generationBrandId: brandId,
+      generationBrandName:
+        get().workspace.brands.find((b) => b.id === brandId)?.name ?? null,
+      generationProgress:
+        provider === "local"
+          ? {
+              jobId,
+              phase: "starting",
+              message: "Preparing local generation",
+              imageIndex: 0,
+              imageCount: count,
+              updatedAt: Date.now(),
+              logs: [],
+            }
+          : null,
       status:
         provider === "local"
           ? "Generating locally…"
@@ -241,6 +351,9 @@ const actions = {
       const state = get();
       const brand = state.workspace.brands.find((b) => b.id === brandId);
       if (!brand) throw new Error("Create or select a brand first.");
+      set({ generationBrandName: brand.name });
+      if (brand.status === "archived")
+        throw new Error("Restore this archived brand before generating.");
       if (!state.prompt.trim())
         throw new Error("Describe the logo you want to create.");
       const dna = resolveDna(brand.id, state.workspace.brands);
@@ -264,6 +377,7 @@ const actions = {
         };
       }
       if (provider === "local") {
+        monitorGeneration(jobId);
         const response = await desktop.generate({
           jobId,
           prompt: effectivePrompt,
@@ -275,6 +389,12 @@ const actions = {
             ? { referenceBase64: state.referenceUrl.split(",")[1] }
             : {}),
         });
+        stopGenerationMonitor();
+        const latest = await desktop
+          .generationProgress(jobId)
+          .catch(() => null);
+        if (latest?.jobId === jobId && activeJob === jobId)
+          set({ generationProgress: latest });
         if (response.images.length !== concepts.length)
           throw new Error(
             "Generation returned an incomplete batch. No partial batch was saved.",
@@ -295,6 +415,10 @@ const actions = {
         pendingConcepts: concepts,
         pendingRecoveryExported: false,
       });
+      progressPhase(
+        "saving",
+        "Saving concepts and source images on this device",
+      );
       if (
         await persist((w) => ({ ...w, concepts: [...w.concepts, ...concepts] }))
       ) {
@@ -304,10 +428,30 @@ const actions = {
           pendingConcepts: [],
           status: `${concepts.length} concepts saved`,
         });
-      }
+        progressPhase("completed", `${concepts.length} concepts saved`);
+      } else
+        progressPhase(
+          "failed",
+          "Generation finished; saving failed. Retry save or export a recovery copy.",
+        );
     } catch (error) {
-      if (activeJob === jobId) fail(error);
+      if (activeJob === jobId) {
+        stopGenerationMonitor();
+        const latest =
+          provider === "local"
+            ? await desktop.generationProgress(jobId).catch(() => null)
+            : null;
+        if (activeJob !== jobId) return;
+        if (latest?.jobId === jobId) set({ generationProgress: latest });
+        fail(error);
+        progressPhase("failed", desktop.message(error));
+      }
     } finally {
+      stopGenerationMonitor();
+      if (activeJob !== jobId) {
+        progressPhase("cancelled", "Generation cancelled");
+        set({ status: "Generation cancelled" });
+      }
       if (activeJob === jobId) activeJob = null;
       set({ busy: false, cancellable: false });
     }
@@ -316,6 +460,7 @@ const actions = {
     const concepts = get().pendingConcepts;
     if (!concepts.length || get().busy) return;
     set({ busy: true });
+    progressPhase("saving", "Retrying the local save without regenerating");
     if (
       await persist((w) => ({
         ...w,
@@ -333,7 +478,12 @@ const actions = {
         selectedBrandId: concepts[0].brandId,
         selectedConceptId: concepts[0].id,
       });
-    }
+      progressPhase("completed", "Recovered concepts saved");
+    } else
+      progressPhase(
+        "failed",
+        "Saving still failed. The completed batch is retained.",
+      );
     set({ busy: false });
   },
   async exportPendingBatch() {
@@ -395,10 +545,10 @@ const actions = {
     const jobId = activeJob;
     if (!jobId || !get().cancellable) return;
     activeJob = null;
+    stopGenerationMonitor();
     set({ cancellable: false, status: "Cancelling generation…" });
     await guarded(async () => {
       await desktop.cancel(jobId);
-      set({ status: "Generation cancelled" });
     });
   },
   async updateConcept(patch: Partial<VectorDocument>) {
@@ -475,7 +625,7 @@ const actions = {
         throw new Error("Trace this image first.");
       const svg = useTrace
         ? sanitizeSvg(concept.tracedSvg!)
-        : renderSvg(concept.document);
+        : await prepareCompositionSvg(concept.document);
       const saved = await desktop.exportFile(
         fileName(useTrace ? "-trace.svg" : "-composition.svg", concept.brandId),
         new TextEncoder().encode(svg),
@@ -507,7 +657,7 @@ const actions = {
           : await rasterize(
               mode === "trace"
                 ? sanitizeSvg(concept.tracedSvg!)
-                : renderSvg(concept.document),
+                : await prepareCompositionSvg(concept.document),
             );
       const saved = await desktop.exportFile(
         fileName(`-${mode}.png`, concept.brandId),
@@ -532,6 +682,7 @@ const actions = {
   },
   async importReference(file: File) {
     const sequence = ++referenceSequence;
+    set({ referenceLoading: true });
     try {
       if (
         !["image/png", "image/jpeg", "image/webp"].includes(file.type) ||
@@ -564,15 +715,38 @@ const actions = {
         .drawImage(image, 0, 0, canvas.width, canvas.height);
       set({
         referenceUrl: canvas.toDataURL("image/png"),
+        referenceInfo: {
+          name: file.name,
+          width: image.width,
+          height: image.height,
+          size: file.size,
+        },
         status: "Reference added",
       });
     } catch (error) {
       if (sequence === referenceSequence) fail(error);
+    } finally {
+      if (sequence === referenceSequence) set({ referenceLoading: false });
     }
+  },
+  async refineConcept() {
+    await guarded(async () => {
+      const concept = selectedConcept();
+      if (!concept.raster)
+        throw new Error("Select an AI image to use as a reference.");
+      const bytes = Uint8Array.from(
+        atob(concept.raster.split(",")[1]),
+        (character) => character.charCodeAt(0),
+      );
+      await actions.importReference(
+        new File([bytes], `${concept.name}.png`, { type: "image/png" }),
+      );
+      actions.setPrompt(concept.prompt);
+    });
   },
   clearReference() {
     referenceSequence++;
-    set({ referenceUrl: null });
+    set({ referenceUrl: null, referenceInfo: null, referenceLoading: false });
   },
   async refreshProvider() {
     try {
@@ -600,6 +774,7 @@ export function useStudio() {
   const state = useState();
   useEffect(() => {
     initialization ??= initialize();
+    if (activeJob && get().generationProgress) monitorGeneration(activeJob);
     let disposed = false;
     let stop: (() => void) | undefined;
     void desktop
@@ -628,6 +803,7 @@ export function useStudio() {
     return () => {
       disposed = true;
       stop?.();
+      stopGenerationMonitor();
     };
   }, []);
   const selectedBrand = state.workspace.brands.find(

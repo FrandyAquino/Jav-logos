@@ -68,6 +68,42 @@ class WorkerTests(unittest.TestCase):
             with self.subTest(endpoint=endpoint), self.assertRaises(WorkerError):
                 ComfyUiProvider({"comfy_url": endpoint})
 
+    def test_preview_event_contains_bounded_real_png(self):
+        from contextlib import redirect_stderr
+        from progress import image_ready
+        source=Image.new("RGB",(1024,512),(20,60,100))
+        output=io.StringIO()
+        with redirect_stderr(output):image_ready(source,2,3)
+        event=json.loads(output.getvalue().removeprefix("JAVLOGOS_EVENT "))
+        self.assertEqual((event["phase"],event["imageIndex"],event["imageCount"]),("image-ready",2,3))
+        self.assertLessEqual(len(event["previewBase64"]),256*1024)
+        image=decode_image(event["previewBase64"])
+        self.assertEqual(image.size,(256,128))
+        self.assertEqual(image.getpixel((50,50)),(20,60,100))
+
+    def test_sdcpp_runs_one_process_for_a_complete_ordered_batch(self):
+        from contextlib import redirect_stderr
+        from sdcpp import SdCppProvider
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);binary=root/"sd-cli";model=root/"model"
+            binary.write_text("#!/usr/bin/env python3\n");binary.chmod(0o700);model.touch()
+            provider=SdCppProvider({"sd_cli":str(binary),"flux_model":str(model),"text_encoder":str(model),"vae":str(model)})
+            launches=[]
+            class Inference:
+                def __init__(self,args,**kwargs):
+                    launches.append(args)
+                    template=args[args.index("--output")+1]
+                    for index in range(int(args[args.index("--batch-count")+1])):
+                        Image.new("RGB",(256,256),(index*80,50,100)).save(template % index)
+                def wait(self,timeout):return 0
+                def poll(self):return 0
+            request=self.request();request["count"]=3
+            with patch("sdcpp.subprocess.Popen",Inference),redirect_stderr(io.StringIO()):
+                result=provider.generate(request)
+            self.assertEqual(len(launches),1)
+            self.assertEqual([image["seed"] for image in result["images"]],[42,43,44])
+            self.assertEqual([decode_image(image["pngBase64"]).getpixel((0,0))[0] for image in result["images"]],[0,80,160])
+
     def test_comfyui_cleanup_attempts_targeted_interrupt_even_if_queue_delete_fails(self):
         from comfyui_adapter import ComfyUiProvider
         with tempfile.TemporaryDirectory() as temporary:

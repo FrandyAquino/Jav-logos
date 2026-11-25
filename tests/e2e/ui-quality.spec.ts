@@ -140,7 +140,7 @@ test("populated workspace stays readable across desktop and compact layouts", as
       await expect(control).toBeVisible();
       const sizes = await page
         .locator(
-          ".prompt-composer textarea, .composer-options select, .generate-button",
+          ".prompt-composer textarea, .composer-options .select-trigger, .generate-button",
         )
         .evaluateAll((elements) =>
           elements.map((element) =>

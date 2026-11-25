@@ -1,42 +1,58 @@
-import { useRef, useState } from "react";
-import { ArrowUp, ImagePlus, LoaderCircle, Square, X } from "lucide-react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ArrowUp, ImagePlus, LoaderCircle, Square } from "lucide-react";
 import { IconButton, shortcutModifier, type StudioState } from "./ui";
+import { SelectField } from "./select-field";
+import { ReferenceCard } from "./reference-card";
 
 export function GenerationBar({ studio }: { studio: StudioState }) {
   const [provider, setProvider] = useState<"procedural" | "local">(
     "procedural",
   );
   const [count, setCount] = useState(4);
+  useEffect(() => {
+    if (studio.referenceUrl) setProvider("local");
+  }, [studio.referenceUrl]);
   const fileInput = useRef<HTMLInputElement>(null);
+  const promptInput = useRef<HTMLTextAreaElement>(null);
+  const archived = studio.selectedBrand?.status === "archived";
   const unavailable = provider === "local" && !studio.providerHealth.available;
+  const inputDisabled = !studio.selectedBrand || studio.busy || archived;
+  const canGenerate =
+    !inputDisabled &&
+    !unavailable &&
+    !studio.referenceLoading &&
+    Boolean(studio.prompt.trim());
+
+  useLayoutEffect(() => {
+    const textarea = promptInput.current;
+    if (!textarea) return;
+    const resize = () => {
+      textarea.style.height = "0px";
+      textarea.style.height = `${Math.min(156, Math.max(56, textarea.scrollHeight))}px`;
+      textarea.style.overflowY =
+        textarea.scrollHeight > 156 ? "auto" : "hidden";
+    };
+    resize();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", resize);
+      return () => window.removeEventListener("resize", resize);
+    }
+    let width = textarea.getBoundingClientRect().width;
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width === width) return;
+      width = entry.contentRect.width;
+      resize();
+    });
+    observer.observe(textarea);
+    return () => observer.disconnect();
+  }, [studio.prompt]);
+
   const generate = () => {
-    if (
-      !studio.busy &&
-      !unavailable &&
-      studio.selectedBrand &&
-      studio.prompt.trim()
-    )
-      void studio.generate(provider, count);
+    if (canGenerate) void studio.generate(provider, count);
   };
+
   return (
     <section className="generation-area" aria-label="Generate concepts">
-      {studio.referenceUrl && (
-        <div className="reference-preview">
-          <img src={studio.referenceUrl} alt="Generation reference" />
-          <span>
-            {provider === "local"
-              ? "Visual reference"
-              : "Reference · used with Local AI"}
-          </span>
-          <IconButton
-            label="Remove reference"
-            onClick={studio.clearReference}
-            disabled={studio.busy}
-          >
-            <X size={13} />
-          </IconButton>
-        </div>
-      )}
       <form
         className="prompt-composer"
         onSubmit={(event) => {
@@ -44,20 +60,41 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
           generate();
         }}
       >
+        {studio.referenceUrl && (
+          <ReferenceCard
+            url={studio.referenceUrl}
+            info={studio.referenceInfo}
+            theme={studio.theme}
+            disabled={inputDisabled || studio.referenceLoading}
+            active={provider === "local"}
+            onReplace={() => fileInput.current?.click()}
+            onRemove={studio.clearReference}
+          />
+        )}
+        {studio.referenceLoading && (
+          <div className="reference-loading" role="status">
+            <LoaderCircle size={14} className="spin" /> Preparing reference…
+          </div>
+        )}
         <textarea
+          ref={promptInput}
           aria-label="Describe your logo"
           placeholder={
             studio.selectedBrand
-              ? `Describe the next direction for ${studio.selectedBrand.name}…`
+              ? `Describe a direction for ${studio.selectedBrand.name}…`
               : "Create a brand to start exploring…"
           }
           value={studio.prompt}
-          disabled={!studio.selectedBrand || studio.busy}
-          rows={2}
+          disabled={inputDisabled}
+          rows={1}
           maxLength={3000}
           onChange={(event) => studio.setPrompt(event.target.value)}
           onKeyDown={(event) => {
-            if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+            if (
+              !event.nativeEvent.isComposing &&
+              (event.metaKey || event.ctrlKey) &&
+              event.key === "Enter"
+            ) {
               event.preventDefault();
               generate();
             }
@@ -71,7 +108,7 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
               accept="image/png,image/jpeg,image/webp"
               hidden
               tabIndex={-1}
-              disabled={!studio.selectedBrand || studio.busy}
+              disabled={inputDisabled || studio.referenceLoading}
               aria-label="Reference image"
               onChange={(event) => {
                 const file = event.target.files?.[0];
@@ -82,34 +119,41 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
             <IconButton
               label="Add reference image"
               onClick={() => fileInput.current?.click()}
-              disabled={!studio.selectedBrand || studio.busy}
+              disabled={inputDisabled || studio.referenceLoading}
             >
-              <ImagePlus size={16} />
+              <ImagePlus size={17} />
             </IconButton>
             <span className="tool-divider" />
-            <select
-              aria-label="Generation provider"
+            <SelectField
+              label="Generation provider"
               value={provider}
               disabled={studio.busy}
-              onChange={(event) =>
-                setProvider(event.target.value as "procedural" | "local")
+              onValueChange={(value) =>
+                setProvider(value as "procedural" | "local")
               }
-            >
-              <option value="procedural">Geometric concepts</option>
-              <option value="local">Local AI · FLUX</option>
-            </select>
-            <select
-              aria-label="Number of concepts"
-              value={count}
+              options={[
+                {
+                  value: "procedural",
+                  label: "Geometric concepts",
+                  description: "Editable vectors · no AI model",
+                },
+                {
+                  value: "local",
+                  label: "Local AI · FLUX",
+                  description: "Generate images on this device",
+                },
+              ]}
+            />
+            <SelectField
+              label="Number of concepts"
+              value={String(count)}
               disabled={studio.busy}
-              onChange={(event) => setCount(Number(event.target.value))}
-            >
-              {[1, 2, 3, 4].map((number) => (
-                <option key={number} value={number}>
-                  {number} {number === 1 ? "concept" : "concepts"}
-                </option>
-              ))}
-            </select>
+              onValueChange={(value) => setCount(Number(value))}
+              options={[1, 2, 3, 4].map((number) => ({
+                value: String(number),
+                label: `${number} ${number === 1 ? "concept" : "concepts"}`,
+              }))}
+            />
           </div>
           {studio.busy && !studio.cancellable ? (
             <span className="working-label">
@@ -127,9 +171,7 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
             <button
               className="generate-button"
               type="submit"
-              disabled={
-                !studio.selectedBrand || !studio.prompt.trim() || unavailable
-              }
+              disabled={!canGenerate}
             >
               <span>Generate</span>
               <ArrowUp size={16} />
@@ -137,23 +179,31 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
           )}
         </div>
       </form>
-      <div
-        className="composer-caption"
-        role={studio.busy ? "status" : undefined}
-      >
-        {studio.busy ? (
-          <>
-            <LoaderCircle className="spin" size={12} /> {studio.status}
-          </>
+      <div className="composer-caption">
+        {archived ? (
+          "This workspace is archived. Restore it from the library to generate."
+        ) : studio.referenceLoading ? (
+          "Your reference is being prepared before generation."
+        ) : studio.busy ? (
+          studio.cancellable ? (
+            "Follow the live activity above. You can cancel this run."
+          ) : (
+            studio.status
+          )
         ) : unavailable ? (
           <>
-            <span className="warning-dot" />
-            Local AI is unavailable. Check the provider status below.
+            <span className="warning-dot" /> Local AI is unavailable. Check the
+            provider status below.
           </>
-        ) : provider === "procedural" ? (
-          "Editable geometric explorations · no AI model used"
         ) : (
-          `Generated on this device · ${shortcutModifier} Enter`
+          <>
+            <span>
+              {provider === "procedural"
+                ? "Editable geometric explorations · no AI model used"
+                : "Local generation · your files stay on this device"}
+            </span>
+            <kbd>{shortcutModifier} Enter</kbd>
+          </>
         )}
       </div>
     </section>

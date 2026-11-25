@@ -1,18 +1,12 @@
 import type { Brand, BrandDna, VectorDocument } from "./types";
+import fontFamilies from "../../shared/font-families.json";
 export const DEFAULT_DNA: BrandDna = {
   palette: ["#7775E7", "#202430", "#F6F5F1"],
   typography: "Avenir Next",
   geometry: "orbit",
   tone: "Precise, confident, imaginative",
 };
-export const FONTS = [
-  "Inter",
-  "Avenir Next",
-  "Georgia",
-  "Helvetica Neue",
-  "Courier New",
-  "system-ui",
-];
+export const FONTS = fontFamilies;
 export function validateHierarchy(brands: Brand[]): void {
   const map = new Map(brands.map((b) => [b.id, b]));
   if (map.size !== brands.length) throw new Error("Duplicate brand identity.");

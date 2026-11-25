@@ -1,0 +1,205 @@
+.select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 36px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  color: var(--text);
+  background: var(--well);
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.select-trigger > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-trigger:hover:not(:disabled) {
+  background: var(--surface);
+}
+.select-trigger[data-state="open"] {
+  border-color: var(--accent);
+}
+.select-trigger[data-placeholder] {
+  color: var(--subtle);
+}
+.select-chevron {
+  display: flex;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.select-content,
+.color-popover {
+  z-index: 40;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  box-shadow: 0 16px 42px -12px var(--shadow);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+.select-content {
+  min-width: var(--radix-select-trigger-width);
+  max-width: min(360px, calc(100vw - 24px));
+  max-height: min(340px, var(--radix-select-content-available-height));
+  overflow: hidden;
+}
+.select-viewport {
+  padding: 5px;
+}
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 36px;
+  padding: 9px 10px;
+  border-radius: 7px;
+  user-select: none;
+  cursor: pointer;
+  outline: none;
+}
+.select-option[data-highlighted] {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.select-option[data-state="checked"] .select-option-label {
+  color: var(--accent);
+}
+.select-option-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.select-option-label {
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.select-option-description {
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 11px;
+}
+.select-check {
+  width: 16px;
+  flex-shrink: 0;
+  display: flex;
+  color: var(--accent);
+}
+.select-scroll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  color: var(--muted);
+}
+.font-picker-trigger > span:first-child {
+  font-size: 15px;
+}
+.select-option-label[style] {
+  font-size: 17px;
+}
+.dialog-field .select-trigger {
+  min-height: 40px;
+  font-size: 14px;
+}
+.color-field.color-field-control {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  background: transparent;
+  padding: 5px 0;
+  color: var(--muted);
+  text-align: left;
+}
+.color-field-control:hover {
+  color: var(--text);
+}
+.color-field-swatch {
+  width: 25px;
+  height: 25px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  flex-shrink: 0;
+}
+.color-field-control code {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--subtle);
+}
+.color-popover {
+  width: 260px;
+  max-width: calc(100vw - 24px);
+  padding: 16px;
+}
+.color-popover-title {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.color-popover .react-colorful {
+  width: 100%;
+  height: 180px;
+}
+.color-popover .react-colorful__saturation {
+  border-radius: 8px 8px 0 0;
+}
+.color-popover .react-colorful__hue {
+  height: 16px;
+  border-radius: 0 0 8px 8px;
+}
+.color-popover .react-colorful__pointer {
+  width: 18px;
+  height: 18px;
+}
+.color-popover .react-colorful__interactive:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.color-hex-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.color-hex-field input {
+  min-width: 0;
+  width: 126px;
+  min-height: 34px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 7px 9px;
+  background: var(--well);
+  color: var(--text);
+  font: inherit;
+}
+.color-picker-help {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.color-picker-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  margin-top: 14px;
+}
+.color-picker-actions button {
+  min-height: 32px;
+}

@@ -1,22 +1,24 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Grid2X2,
   Image,
   Maximize,
   Plus,
   ScanLine,
+  RefreshCw,
   Sparkles,
+  Activity,
+  Archive,
+  CheckCircle2,
 } from "lucide-react";
-import { renderSvg } from "../domain/vector";
-import type { Concept } from "../domain/types";
 import { GenerationBar } from "./generation-bar";
-import { IconButton, Mark, rasterUrl, svgUrl, type StudioState } from "./ui";
-
-function artwork(concept: Concept, mode: "vector" | "image" | "trace") {
-  if (mode === "image" && concept.raster) return rasterUrl(concept.raster);
-  if (mode === "trace" && concept.tracedSvg) return svgUrl(concept.tracedSvg);
-  return svgUrl(renderSvg(concept.document));
-}
+import { IconButton, Mark, type StudioState } from "./ui";
+import { ConceptArtwork } from "./concept-artwork";
+import {
+  GenerationProgressPanel,
+  generationIsActive,
+  generationPhaseLabels,
+} from "./generation-progress";
 
 export function CreativeCanvas({
   studio,
@@ -26,6 +28,7 @@ export function CreativeCanvas({
   onCreate: () => void;
 }) {
   const [gallery, setGallery] = useState(false);
+  const [viewActivity, setViewActivity] = useState(true);
   const [view, setView] = useState<"vector" | "image" | "trace">("image");
   const [previewBackground, setPreviewBackground] = useState<
     "paper" | "dark" | "grid"
@@ -34,6 +37,11 @@ export function CreativeCanvas({
     (concept) => concept.brandId === studio.selectedBrand?.id,
   );
   const selected = studio.selectedConcept;
+  const generationActive = generationIsActive(studio);
+  const showActivity = generationActive && viewActivity;
+  useEffect(() => {
+    if (studio.generationStartedAt !== null) setViewActivity(true);
+  }, [studio.generationStartedAt]);
   const effectiveView =
     view === "trace" && selected?.tracedSvg
       ? "trace"
@@ -59,25 +67,67 @@ export function CreativeCanvas({
               {parent ? "Sub-brand" : "Parent brand"}
             </span>
           )}
+          {studio.selectedBrand?.status === "completed" && (
+            <span className="workspace-state">
+              <CheckCircle2 size={13} /> Completed
+            </span>
+          )}
+          {studio.selectedBrand?.status === "archived" && (
+            <span className="workspace-state">
+              <Archive size={13} /> Archived
+            </span>
+          )}
         </div>
         <div className="view-switch" role="group" aria-label="Workspace view">
           <IconButton
             label="Canvas view"
-            active={!gallery}
-            onClick={() => setGallery(false)}
+            active={!gallery && !showActivity}
+            disabled={!concepts.length}
+            onClick={() => {
+              setGallery(false);
+              setViewActivity(false);
+            }}
           >
             <Maximize size={15} />
           </IconButton>
           <IconButton
             label="Gallery view"
-            active={gallery}
-            onClick={() => setGallery(true)}
+            active={gallery && !showActivity}
+            disabled={!concepts.length}
+            onClick={() => {
+              setGallery(true);
+              setViewActivity(false);
+            }}
           >
             <Grid2X2 size={15} />
           </IconButton>
+          {generationActive && (
+            <IconButton
+              label="Generation activity"
+              active={showActivity}
+              onClick={() => setViewActivity(true)}
+            >
+              <Activity size={15} />
+            </IconButton>
+          )}
         </div>
       </div>
-      {!studio.selectedBrand ? (
+      {!showActivity && studio.generationProgress && (
+        <details className="last-generation">
+          <summary>
+            <Activity size={14} />
+            <span>
+              {generationPhaseLabels[studio.generationProgress.phase] ||
+                "Last generation"}
+            </span>
+            <span>View activity</span>
+          </summary>
+          <GenerationProgressPanel studio={studio} compact />
+        </details>
+      )}
+      {showActivity ? (
+        <GenerationProgressPanel studio={studio} />
+      ) : !studio.selectedBrand ? (
         <div className="welcome-canvas">
           <div className="welcome-emblem">
             <Mark />
@@ -118,8 +168,9 @@ export function CreativeCanvas({
               }}
             >
               <div className="gallery-art">
-                <img
-                  src={artwork(concept, concept.raster ? "image" : "vector")}
+                <ConceptArtwork
+                  concept={concept}
+                  mode={concept.raster ? "image" : "vector"}
                   alt={`${concept.name} logo`}
                 />
               </div>
@@ -145,9 +196,10 @@ export function CreativeCanvas({
             </span>
           </div>
           <div className={`artboard ${previewBackground}`}>
-            <img
+            <ConceptArtwork
               className="main-artwork"
-              src={artwork(selected, effectiveView)}
+              concept={selected}
+              mode={effectiveView}
               alt={`${selected.name}: ${effectiveView === "image" ? "original generated image" : effectiveView === "trace" ? "traced vector" : "editable vector composition"}`}
             />
           </div>
@@ -216,7 +268,20 @@ export function CreativeCanvas({
                 )}
               </div>
             )}
-            <span className="canvas-fit">Fit to canvas</span>
+            {selected.raster ? (
+              <button
+                type="button"
+                className="subtle-button"
+                disabled={studio.busy || studio.referenceLoading}
+                onClick={() => void studio.refineConcept()}
+                title="Use this image and its prompt as the next reference"
+              >
+                <RefreshCw size={13} />
+                Refine image
+              </button>
+            ) : (
+              <span className="canvas-fit">Fit to canvas</span>
+            )}
           </div>
           <div className="concept-strip" aria-label="Concepts">
             {concepts.map((concept) => (
@@ -229,8 +294,9 @@ export function CreativeCanvas({
                 key={concept.id}
                 onClick={() => studio.selectConcept(concept.id)}
               >
-                <img
-                  src={artwork(concept, concept.raster ? "image" : "vector")}
+                <ConceptArtwork
+                  concept={concept}
+                  mode={concept.raster ? "image" : "vector"}
                   alt=""
                 />
                 <span>{concept.name}</span>

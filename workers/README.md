@@ -23,7 +23,7 @@ For a packaged app, set `JAVLOGOS_PYTHON` to the isolated environment interprete
 
 ## Provider adapters
 
-- **sdcpp:** verified locally on macOS Apple Silicon, existing Metal-enabled binary commit `95b3090`; supports text generation and one reference image. Sequential batch items use seed + index and reload the model. CPU/CUDA/Vulkan runtime binaries must be independently provisioned and tested on other platforms.
+- **sdcpp:** verified locally on macOS Apple Silicon, existing Metal-enabled binary commit `95b3090`; supports text generation and one reference image. One `--batch-count` process loads the models once and produces ordered images using seed + index. Requires the runtime's numbered output and batch-count options (verified via its actual `--help`). CPU/CUDA/Vulkan runtime binaries must be independently provisioned and tested on other platforms.
 - **diffusers:** optional `requirements-diffusers.txt`, complete local snapshot at `JAVLOGOS_DIFFUSERS_MODEL`; no implicit downloads (`local_files_only=True`). Uses `Flux2KleinPipeline`, four steps, guidance 1; device chooses CUDA, MPS, then CPU. Adapter exists but no inference acceptance has been run. GGUF split files are **not** a complete Diffusers snapshot.
 - **comfyui:** explicit local server only (`JAVLOGOS_COMFY_URL`, default `http://127.0.0.1:8188`), and API-format workflow JSON at `JAVLOGOS_COMFY_WORKFLOW`. Replace whole input values with `"{{prompt}}"`, `"{{seed}}"`, `"{{width}}"`, `"{{height}}"`; optional `"{{reference}}"` receives an uploaded reference filename. Numeric placeholders become numeric JSON values. Template nodes and installed model filenames must be compatible with the user's server. Redirects/proxies are disabled. This adapter has no live-server acceptance yet.
 
@@ -36,3 +36,11 @@ ComfyUI cancellation always deletes only this queued prompt. Set `JAVLOGOS_COMFY
 Generation accepts counts 1–4, dimensions 256–1024 in multiples of 64, a bounded prompt, seed and optional base64 PNG/JPEG/WebP. References are decoded, dimensions checked, and re-encoded as raster. VTracer downsizes input above 1024px, returns SVG paths, and enforces a 4 MiB output bound. UI must independently sanitize resulting SVG before use.
 
 SIGTERM unwinds worker adapters and terminates/reaps the owned sd-cli process. Native authority owns process-group termination, timeouts and cancellation races; those tests are separate from the Python child-cleanup test. No retry or replay of interrupted generation occurs automatically.
+
+## Observable generation
+
+Stderr may contain `JAVLOGOS_EVENT ` followed by a JSON object with phase, message, imageIndex/imageCount, optional real step/steps, and an optional completed-image thumbnail. Native code drains stderr continuously, distinguishes model tensor counters from diffusion steps, strips terminal escape sequences/local paths, bounds the 80-line log ring and keeps the latest owned job snapshot for `generation_progress`. Long log streams no longer fail merely for exceeding the old 64 KiB total. Individual oversized lines are discarded; stdout remains bounded final JSON.
+
+No diffusion preview is fabricated. The sd-cli batch currently writes final images after decoding, so thumbnails appear when those outputs exist. Native parsing exposes the actual image/step lines during sampling. ComfyUI's HTTP history adapter reports submission/waiting and completed output; it does not claim node/step progress without a live event channel. Diffusers has a step-end callback but remains unverified against a complete local snapshot.
+
+Executed 2026-11-25 on M5: real two-image 256 px batch completed in 26.352 seconds, seeds 42/43, distinct PNGs. Only one diffusion-model load appeared in its log. Receipt, raw log and images are in ignored `workers/artifacts/observable-batch/`. This is one smoke observation, not a statistical benchmark. No active sd-cli process was present when investigating the reported freeze, so no deadlock reproduction is claimed; opaque status and per-image model reloads were confirmed from source.

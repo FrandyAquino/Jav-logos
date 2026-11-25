@@ -1,3 +1,6 @@
+use crate::generation_progress::{
+    drain_diagnostics, GenerationPhase, GenerationProgress, ProgressHandle,
+};
 use crate::{
     error::{AppError, AppResult},
     model::identifier,
@@ -22,6 +25,7 @@ use tokio::{
 pub struct WorkerManager {
     jobs: Arc<Mutex<HashMap<String, watch::Sender<bool>>>>,
     generation_slot: Semaphore,
+    progress: Arc<Mutex<Option<GenerationProgress>>>,
 }
 
 impl Default for WorkerManager {
@@ -29,6 +33,7 @@ impl Default for WorkerManager {
         Self {
             jobs: Arc::default(),
             generation_slot: Semaphore::new(1),
+            progress: Arc::default(),
         }
     }
 }
@@ -128,30 +133,70 @@ impl WorkerManager {
             id: request.job_id.clone(),
             jobs: self.jobs.clone(),
         };
+        let progress =
+            ProgressHandle::start(request.job_id.clone(), request.count, self.progress.clone())?;
         let payload = json!({"jobId":request.job_id,"prompt":request.prompt,"seed":request.seed,"count":request.count,"width":request.width,"height":request.height,"referenceBase64":request.reference_base64});
-        let result = run(app, "generate", payload, Duration::from_secs(900), receiver).await?;
-        let result: GenerationResult = serde_json::from_value(result).map_err(|e| {
-            AppError::new(
-                "WORKER_PROTOCOL",
-                format!("Invalid generation response: {e}"),
+        let outcome: AppResult<GenerationResult> = async {
+            let result = run(
+                app,
+                "generate",
+                payload,
+                Duration::from_secs(900),
+                receiver,
+                Some(progress.clone()),
             )
-        })?;
-        if result.images.len() != request.count as usize || result.provider.len() > 200 {
-            return Err(AppError::new(
-                "WORKER_PROTOCOL",
-                "Worker returned an unexpected image count or provider",
-            ));
-        }
-        for image in &result.images {
-            decode_png(&image.png_base64)?;
-            if image.seed > 9_007_199_254_740_991 {
+            .await?;
+            let result: GenerationResult = serde_json::from_value(result).map_err(|e| {
+                AppError::new(
+                    "WORKER_PROTOCOL",
+                    format!("Invalid generation response: {e}"),
+                )
+            })?;
+            if result.images.len() != request.count as usize || result.provider.len() > 200 {
                 return Err(AppError::new(
                     "WORKER_PROTOCOL",
-                    "Worker seed exceeds safe numeric range",
+                    "Worker returned an unexpected image count or provider",
                 ));
             }
+            for image in &result.images {
+                decode_png(&image.png_base64)?;
+                if image.seed > 9_007_199_254_740_991 {
+                    return Err(AppError::new(
+                        "WORKER_PROTOCOL",
+                        "Worker seed exceeds safe numeric range",
+                    ));
+                }
+            }
+            Ok(result)
         }
-        Ok(result)
+        .await;
+        match &outcome {
+            Ok(_) => progress.phase(
+                GenerationPhase::Completed,
+                "Generation finished; images returned to the studio",
+            ),
+            Err(error) => progress.phase(
+                if error.code == "CANCELLED" {
+                    GenerationPhase::Cancelled
+                } else {
+                    GenerationPhase::Failed
+                },
+                &error.message,
+            ),
+        }
+        outcome
+    }
+
+    pub fn progress(&self, job_id: &str) -> AppResult<Option<GenerationProgress>> {
+        identifier(job_id)?;
+        let slot = self
+            .progress
+            .lock()
+            .map_err(|_| AppError::new("INTERNAL_ERROR", "Progress registry unavailable"))?;
+        Ok(slot
+            .as_ref()
+            .filter(|progress| progress.job_id == job_id)
+            .cloned())
     }
 
     pub fn cancel(&self, job_id: &str) -> AppResult<bool> {
@@ -183,12 +228,19 @@ impl WorkerManager {
 
 pub async fn health(app: &AppHandle) -> ProviderHealth {
     let (_sender, receiver) = watch::channel(false);
-    let result = run(app, "health", json!({}), Duration::from_secs(20), receiver)
-        .await
-        .and_then(|value| {
-            serde_json::from_value::<ProviderHealth>(value)
-                .map_err(|error| AppError::new("WORKER_PROTOCOL", error.to_string()))
-        });
+    let result = run(
+        app,
+        "health",
+        json!({}),
+        Duration::from_secs(20),
+        receiver,
+        None,
+    )
+    .await
+    .and_then(|value| {
+        serde_json::from_value::<ProviderHealth>(value)
+            .map_err(|error| AppError::new("WORKER_PROTOCOL", error.to_string()))
+    });
     match result {
         Ok(health) => health,
         Err(error) => ProviderHealth {
@@ -208,6 +260,7 @@ pub async fn vectorize(app: &AppHandle, png_base64: String) -> AppResult<String>
         json!({"pngBase64":png_base64}),
         Duration::from_secs(60),
         receiver,
+        None,
     )
     .await?;
     let svg = result.as_str().ok_or_else(|| {
@@ -329,9 +382,19 @@ async fn run(
     payload: Value,
     timeout: Duration,
     cancellation: watch::Receiver<bool>,
+    progress: Option<ProgressHandle>,
 ) -> AppResult<Value> {
     let (python, script) = paths(app)?;
-    execute(&python, &script, command, payload, timeout, cancellation).await
+    execute(
+        &python,
+        &script,
+        command,
+        payload,
+        timeout,
+        cancellation,
+        progress,
+    )
+    .await
 }
 
 async fn execute(
@@ -341,6 +404,7 @@ async fn execute(
     payload: Value,
     timeout: Duration,
     mut cancellation: watch::Receiver<bool>,
+    progress: Option<ProgressHandle>,
 ) -> AppResult<Value> {
     let mut process = Command::new(python);
     process
@@ -400,7 +464,7 @@ async fn execute(
                 write,
                 wait,
                 read_bounded(output, 96 * 1024 * 1024),
-                read_bounded(diagnostic, 64 * 1024)
+                drain_diagnostics(diagnostic, progress)
             )?;
             Ok((status, stdout, stderr))
         };
@@ -487,6 +551,18 @@ mod tests {
         assert!(manager.cancel("job-a").unwrap());
         assert!(*receiver.borrow());
     }
+    #[test]
+    fn progress_query_only_returns_the_owned_latest_job() {
+        let manager = WorkerManager::default();
+        let handle =
+            ProgressHandle::start("owned-job".into(), 2, manager.progress.clone()).unwrap();
+        assert!(manager.progress("different-job").unwrap().is_none());
+        handle.phase(GenerationPhase::Completed, "Complete");
+        assert_eq!(
+            manager.progress("owned-job").unwrap().unwrap().phase,
+            GenerationPhase::Completed
+        );
+    }
     #[tokio::test]
     async fn output_limit_is_enforced() {
         assert!(read_bounded(&b"12345"[..], 4).await.is_err());
@@ -507,6 +583,7 @@ mod tests {
             json!({"value":42}),
             Duration::from_secs(5),
             receiver,
+            None,
         )
         .await
         .unwrap();
@@ -531,6 +608,7 @@ mod tests {
             json!({}),
             Duration::from_millis(100),
             receiver,
+            None,
         )
         .await;
         assert_eq!(result.unwrap_err().code, "WORKER_TIMEOUT");
@@ -543,6 +621,7 @@ mod tests {
             json!({}),
             Duration::from_secs(10),
             receiver,
+            None,
         )
         .await;
         assert_eq!(result.unwrap_err().code, "CANCELLED");
@@ -563,6 +642,7 @@ mod tests {
             json!({"marker":marker}),
             Duration::from_millis(500),
             receiver,
+            None,
         )
         .await;
         assert_eq!(result.unwrap_err().code, "WORKER_TIMEOUT");
@@ -589,6 +669,7 @@ mod tests {
             json!({"marker":marker}),
             Duration::from_millis(500),
             receiver,
+            None,
         )
         .await;
         assert_eq!(result.unwrap_err().code, "WORKER_TIMEOUT");

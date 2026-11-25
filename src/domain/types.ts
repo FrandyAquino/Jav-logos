@@ -12,6 +12,19 @@ export interface Brand {
   parentId: string | null;
   dna: Partial<BrandDna>;
   createdAt: string;
+  status?: "active" | "completed" | "archived";
+  pinned?: boolean;
+  order?: number;
+  icon?:
+    | "diamond"
+    | "orbit"
+    | "flower"
+    | "type"
+    | "triangle"
+    | "waves"
+    | "grid"
+    | "layers"
+    | "spark";
 }
 export interface VectorDocument {
   shape: ShapeKind;
@@ -72,4 +85,26 @@ export interface GenerationRequest {
 export interface GenerationResult {
   images: { pngBase64: string; seed: number }[];
   provider: string;
+}
+export interface GenerationProgress {
+  jobId: string;
+  phase:
+    | "starting"
+    | "loading"
+    | "encoding"
+    | "sampling"
+    | "decoding"
+    | "image-ready"
+    | "saving"
+    | "completed"
+    | "cancelled"
+    | "failed";
+  message: string;
+  imageIndex: number;
+  imageCount: number;
+  step?: number;
+  steps?: number;
+  updatedAt: number;
+  logs: { at: number; message: string }[];
+  previewBase64?: string;
 }
