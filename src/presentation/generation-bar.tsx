@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { ArrowUp, ImagePlus, LoaderCircle, Square, X } from "lucide-react";
-import { IconButton, type StudioState } from "./ui";
+import { IconButton, shortcutModifier, type StudioState } from "./ui";
 
 export function GenerationBar({ studio }: { studio: StudioState }) {
   const [provider, setProvider] = useState<"procedural" | "local">(
@@ -23,8 +23,16 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
       {studio.referenceUrl && (
         <div className="reference-preview">
           <img src={studio.referenceUrl} alt="Generation reference" />
-          <span>Visual reference</span>
-          <IconButton label="Remove reference" onClick={studio.clearReference}>
+          <span>
+            {provider === "local"
+              ? "Visual reference"
+              : "Reference · used with Local AI"}
+          </span>
+          <IconButton
+            label="Remove reference"
+            onClick={studio.clearReference}
+            disabled={studio.busy}
+          >
             <X size={13} />
           </IconButton>
         </div>
@@ -46,7 +54,7 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
           value={studio.prompt}
           disabled={!studio.selectedBrand || studio.busy}
           rows={2}
-          maxLength={4000}
+          maxLength={3000}
           onChange={(event) => studio.setPrompt(event.target.value)}
           onKeyDown={(event) => {
             if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
@@ -61,7 +69,9 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
               ref={fileInput}
               type="file"
               accept="image/png,image/jpeg,image/webp"
-              className="visually-hidden"
+              hidden
+              tabIndex={-1}
+              disabled={!studio.selectedBrand || studio.busy}
               aria-label="Reference image"
               onChange={(event) => {
                 const file = event.target.files?.[0];
@@ -127,7 +137,10 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
           )}
         </div>
       </form>
-      <div className="composer-caption">
+      <div
+        className="composer-caption"
+        role={studio.busy ? "status" : undefined}
+      >
         {studio.busy ? (
           <>
             <LoaderCircle className="spin" size={12} /> {studio.status}
@@ -140,7 +153,7 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
         ) : provider === "procedural" ? (
           "Editable geometric explorations · no AI model used"
         ) : (
-          "Generated locally on your machine · ⌘ / Ctrl + Enter"
+          `Generated on this device · ${shortcutModifier} Enter`
         )}
       </div>
     </section>

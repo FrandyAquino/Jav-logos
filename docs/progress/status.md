@@ -1,6 +1,6 @@
 # Implementation status
 
-Implemented 2026-11-25 from an empty workspace using Codex-provider agents. Branch: `feat/javlogos-studio`. Native host: macOS 27.0.1, Apple M5, 24 GB RAM; Node 24.22.2, Rust 1.96.0, uv 0.11.23, isolated Python 3.12.
+Implemented 2026-11-25 from an empty workspace using Codex-provider agents. Branch: `feat/javlogos-studio`. Native host: macOS 27.0.1, Apple M5, 24 GB RAM; Node 24.22.2, Rust 1.96.0, uv 0.11.23, isolated Python 3.12. Subsequent UI refinement adds JavParlance-inspired floating panels, Google Sans Flex offline typography, keyboard/focus improvements and a macOS integrated header; see `ui-refinement.md` for that pass's evidence.
 
 ## Delivered and verified
 
@@ -13,12 +13,12 @@ Local inference uses existing GGUF weights through stable-diffusion.cpp Metal. T
 | TypeScript tests | 14 passed |
 | Rust tests | 15 passed |
 | Python tests | 9 passed |
-| Browser end-to-end tests | 3 passed |
+| Browser end-to-end tests | 6 passed after UI refinement |
 | Typecheck, ESLint, Vite production build | Passed |
 | Rust clippy with warnings denied and formatting | Passed |
 | npm production dependency audit | 0 reported vulnerabilities |
-| Twelve repository SKILL.md validations | Passed |
-| macOS debug .app bundle | Passed, approximately 30.29 MiB |
+| Repository SKILL.md validations | Initial12 passed; new studio-ui-polish skill also passed |
+| macOS debug .app bundle | Passed, approximately30.50MiB after UI refinement |
 | Native generation, tracing, export and restart | Passed; see native-acceptance.md |
 | Windows/Linux native runtime and remote CI | Unrun |
 

@@ -21,6 +21,6 @@ Tauri resolves to 2.12.7 and requires Rust 1.90 or later; host Rust 1.96 passes.
 
 Official Tauri documentation was retrieved via Context7 /tauri-apps/tauri-docs: https://v2.tauri.app/security/csp/ and https://v2.tauri.app/plugin/dialog/ . CSP allows only local IPC and bundled/blob/data imagery; save destinations are selected by Rust native dialog. Platform prerequisites: https://v2.tauri.app/start/prerequisites/ .
 
-Dependency manifest licenses are an inventory, not a full transitive legal audit. Model/runtime sources and licenses are in ai-runtime.md. No fonts or weights are redistributed. No subscription is required.
+Dependency manifest licenses are an inventory, not a full transitive legal audit. Model/runtime sources and licenses are in ai-runtime.md. Model weights are not redistributed. The UI refinement bundles Google Sans Flex subsets with OFL/trademark notices; see ui-skills-and-typography.md. Brand-document fonts are not embedded in exports. No subscription is required.
 
 Optional ImageGen/Figma/Canva/MagicPath connectors are available to the development environment but that does not establish redistributable desktop APIs or end-user authentication. No runtime integration is claimed or silently enabled.

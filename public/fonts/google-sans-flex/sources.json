@@ -1,0 +1,18 @@
+{
+  "family": "Google Sans Flex",
+  "verified": "2026-11-25",
+  "license": "OFL-1.1",
+  "licenseSource": "https://github.com/google/fonts/blob/main/ofl/googlesansflex/OFL.txt",
+  "files": {
+    "latin-ext": {
+      "url": "https://fonts.gstatic.com/s/googlesansflex/v27/t5tQIQcYNIWbFgDgAAzZ34auoVyXkJCOvoOmPWNbN5hF8Ju1x5tKByN2l9sI40swNJwakXdYAZzz0jbnDYitsRTyqTXCDA.woff2",
+      "bytes": 67472,
+      "sha256": "c038416b0295381b4ddf712a6b677b9f3f15c6221a79cbe8d0d5da1fd573b4b4"
+    },
+    "latin": {
+      "url": "https://fonts.gstatic.com/s/googlesansflex/v27/t5tQIQcYNIWbFgDgAAzZ34auoVyXkJCOvoOmPWNbN5hF8Ju1x5tKByN2l9sI40swNJwakXdYAZzz0jbnDYatsRTyqTU.woff2",
+      "bytes": 135836,
+      "sha256": "23b0542994455a3f2ee2ccba25b205a77f40e205b103c0384367ae1897649191"
+    }
+  }
+}

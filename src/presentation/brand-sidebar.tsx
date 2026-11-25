@@ -1,12 +1,5 @@
 import { useState } from "react";
-import {
-  ChevronRight,
-  FolderTree,
-  Layers3,
-  Plus,
-  Search,
-  Sparkles,
-} from "lucide-react";
+import { FolderTree, Layers3, Plus, Search, ShieldCheck } from "lucide-react";
 import type { Brand } from "../domain/types";
 import { IconButton, type StudioState } from "./ui";
 
@@ -74,18 +67,24 @@ export function BrandSidebar({
             className={`brand-row ${brand.id === studio.selectedBrand?.id ? "selected" : ""}`}
             style={{ paddingLeft: 12 + depth(brand) * 14 }}
             onClick={() => studio.selectBrand(brand.id)}
+            title={brand.name}
             aria-current={
               brand.id === studio.selectedBrand?.id ? "page" : undefined
             }
           >
             {brands.some((item) => item.parentId === brand.id) ? (
-              <ChevronRight className="tree-chevron" size={12} />
+              <FolderTree className="tree-chevron" size={12} />
             ) : (
               <span className="tree-dot" />
             )}
             <span
               className="brand-avatar"
-              style={{ background: brand.dna.palette?.[0] }}
+              style={{
+                background: brand.dna.palette?.[0],
+                color: brand.dna.palette?.[0]
+                  ? avatarTextColor(brand.dna.palette[0])
+                  : undefined,
+              }}
             >
               {brand.name.slice(0, 1).toUpperCase()}
             </span>
@@ -113,14 +112,30 @@ export function BrandSidebar({
       <div className="sidebar-bottom">
         <div className="dna-note">
           <Layers3 size={19} />
-          <strong>Related. Distinct.</strong>
-          <p>Build a family of identities with shared Brand DNA.</p>
+          <strong>Shared Brand DNA</strong>
+          <p>
+            Sub-brands inherit a palette, typeface and visual direction.
+            Override any field when they need their own identity.
+          </p>
         </div>
         <div className="local-note">
-          <Sparkles size={13} />
-          <span>Made for your creative process</span>
+          <ShieldCheck size={13} />
+          <span>
+            {studio.native ? "Stored on this device" : "Stored in this browser"}
+          </span>
         </div>
       </div>
     </aside>
   );
+}
+
+function avatarTextColor(color: string): string {
+  const channels = [1, 3, 5]
+    .map((start) => parseInt(color.slice(start, start + 2), 16) / 255)
+    .map((value) =>
+      value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4,
+    );
+  const luminance =
+    0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+  return luminance > 0.179 ? "#000000" : "#ffffff";
 }

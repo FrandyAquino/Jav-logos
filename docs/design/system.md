@@ -1,11 +1,19 @@
 # Workspace design system
 
-The subject is brand-making: keep the artboard dominant, hierarchy legible and inherited rules visible. Shell surfaces use slate and translucent blue-gray; periwinkle indicates active controls. Artwork lives on a neutral paper artboard independent of shell theme. Native titlebar is retained for reliable platform window controls.
+The subject is brand-making: keep the artboard dominant, hierarchy legible and inherited rules visible. The refined shell follows JavParlance's floating-panel composition with8px gutters, quiet glass and steel-blue actions. Artwork lives on a neutral artboard independent of shell theme. Native window controls are retained. macOS uses a titlebar overlay with dedicated control space and a draggable header; other platforms retain their standard titlebar fallback. See `ui-refinement.md` for the user-directed brief and reference evidence.
 
-Three panels: brand family → gallery/artboard → contextual inspector. At narrow widths, inspectors may stack rather than squeeze the canvas. Panel widths are user-controlled. Typography uses locally available system fonts; no network font request. Exported SVG names fonts but does not embed licensed fonts.
+Three panels: brand family → gallery/artboard → contextual inspector. Wide layouts support pointer/keyboard resizing. Compact layouts use fixed columns, then stacked inspector/panels, with resizing controls removed when they no longer apply. The composer and primary actions stay reachable without shrinking text.
 
-Use semantic background, surface, text, muted, border, accent and danger tokens for both themes. Blur is decorative with opaque fallback. Reduced motion disables transitions. Focus outlines remain visible; icon-only controls need accessible names. Dialogs trap focus and Escape returns it to the trigger. Sliders and splitters expose labels, values and keyboard operation.
+The UI uses bundled **Google Sans Flex**, the verified primary Gemini family, with platform fallbacks. Assets, source hashes, OFL and trademark notices live in `public/fonts/google-sans-flex/`; `fonts.css` declares local-only font faces. UI text uses13–14px body/input sizes and11–12px support labels, weights400/500/600, optical sizing auto. Saved brand typography and SVG documents retain their own fonts; UI refinement never silently restyles logos.
+
+Palette/material authority is `src/presentation/tokens.css`: ink/slate dark surfaces, cool off-white light surfaces, blue accent, independent semantic success/warning/error. Panel/control radii and motion timing are centralized there. Use stronger control borders for discoverability and quieter decorative panel borders. Opaque and reduced-transparency fallbacks are required; CSS glass is not native OS vibrancy.
+
+The native window theme/background is synchronized by `src/infrastructure/desktop.ts`. Its two fallback background colors mirror `--base` in `tokens.css`; update them together when changing the shell palette. Permissions are scoped to the main window's theme, background and dragging only.
+
+Use semantic background, surface, text, muted, border, accent and danger tokens for both themes. Reduced motion disables transitions. Focus outlines remain visible; icon-only controls need accessible names. Dialogs trap focus and Escape returns it to their invoker, including command-palette handoffs. The command palette supports filtered arrow navigation and Enter. Platform shortcut hints use Cmd on Apple and Ctrl elsewhere. Programmatically activated file inputs stay outside sequential keyboard navigation. Sliders and splitters expose labels, values and keyboard operation.
 
 Original AI image, traced vector and editable geometric composition are distinct views. Trace does not imply semantic path editing. Brand-consistency scores are transparent rule comparisons of composition properties, not a machine vision verdict on the original raster.
 
 Empty workspace invites brand creation; empty gallery invites generation. Errors remain visible until dismissed; do not replace failed work with sample success. Generation shows the actual provider and supports cancellation. Export cancellation is inert.
+
+Quality gates: `tests/e2e/ui-quality.spec.ts` checks bundled font loading, no runtime Google font request, automated WCAG A/AA checks on settled themes/dialogs, command focus, compact widths and reduced motion. Inspect screenshots in addition to automation. Native macOS and other-platform evidence remain separate.

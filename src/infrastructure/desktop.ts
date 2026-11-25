@@ -9,6 +9,13 @@ import type {
 } from "../domain/types";
 const KEY = "javlogos.workspace.v1";
 export const native = isTauri();
+export async function syncWindowTheme(theme: "light" | "dark"): Promise<void> {
+  if (!native) return;
+  const { getCurrentWindow } = await import("@tauri-apps/api/window");
+  const window = getCurrentWindow();
+  await window.setTheme(theme);
+  await window.setBackgroundColor(theme === "dark" ? "#111923" : "#e9eef5");
+}
 export async function watchClose(
   shouldBlock: () => boolean,
   onBlocked: () => void,

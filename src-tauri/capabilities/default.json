@@ -3,5 +3,5 @@
   "identifier": "main-window",
   "description": "Local application window only. No renderer filesystem or shell permissions.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "core:window:allow-set-theme", "core:window:allow-set-background-color", "core:window:allow-start-dragging"]
 }

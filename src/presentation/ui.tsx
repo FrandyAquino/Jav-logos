@@ -6,6 +6,9 @@ import { SHAPES } from "../domain/vector";
 export type StudioState = ReturnType<typeof useStudio>;
 export const shapes = SHAPES;
 export const fonts = FONTS;
+export const shortcutModifier = /Mac|iPhone|iPad|iPod/.test(navigator.platform)
+  ? "⌘"
+  : "Ctrl";
 export const svgUrl = (svg: string) =>
   `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 export const rasterUrl = (raster: string) =>
@@ -31,7 +34,7 @@ export function IconButton({
   onClick,
   children,
   disabled = false,
-  active = false,
+  active,
 }: {
   label: string;
   onClick: () => void;
@@ -45,6 +48,7 @@ export function IconButton({
       className={`icon-button ${active ? "active" : ""}`}
       title={label}
       aria-label={label}
+      aria-pressed={active}
       onClick={onClick}
       disabled={disabled}
     >

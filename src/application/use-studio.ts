@@ -79,7 +79,10 @@ async function initialize() {
   } catch (error) {
     fail(error);
   }
-  await actions.refreshProvider();
+  await Promise.all([
+    actions.refreshProvider(),
+    desktop.syncWindowTheme(get().theme).catch(fail),
+  ]);
 }
 async function persist(
   transform: (workspace: Workspace) => Workspace,
@@ -590,6 +593,7 @@ const actions = {
   setTheme(theme: "light" | "dark") {
     localStorage.setItem("javlogos.theme", theme);
     set({ theme });
+    void desktop.syncWindowTheme(theme).catch(fail);
   },
 };
 export function useStudio() {

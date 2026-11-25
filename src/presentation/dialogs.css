@@ -1,51 +1,60 @@
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background: #080b1675;
-  backdrop-filter: blur(5px);
+  background: rgb(8 16 30 / 0.5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   z-index: 20;
-  animation: fade-in 120ms ease-out;
+  animation: fade-in 160ms ease-out;
 }
 .dialog-content {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(430px, calc(100% - 32px));
-  max-height: calc(100dvh - 60px);
+  width: min(460px, calc(100% - 32px));
+  max-height: calc(100dvh - 48px);
   overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 16px;
   background: var(--panel);
   color: var(--text);
   padding: 28px;
-  box-shadow: 0 25px 100px #0005;
+  box-shadow: 0 24px 72px -18px rgb(0 0 0 / 0.45);
   z-index: 21;
-  font-size: 12px;
+  font-family: var(--font-ui, "Google Sans Flex", system-ui, sans-serif);
+  font-size: 14px;
+  line-height: 1.5;
+}
+@supports (backdrop-filter: blur(1px)) {
+  .dialog-content {
+    background: var(--panel-glass);
+    backdrop-filter: blur(32px) saturate(140%);
+    -webkit-backdrop-filter: blur(32px) saturate(140%);
+  }
 }
 .dialog-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  margin-bottom: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  margin-bottom: 18px;
 }
 .dialog-content h2 {
-  font-size: 20px;
+  font-size: 23px;
   line-height: 1.25;
-  letter-spacing: -0.5px;
-  font-weight: 550;
+  letter-spacing: -0.025em;
+  font-weight: 500;
   margin: 0 0 10px;
 }
 .dialog-content > p {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--muted);
-  line-height: 1.8;
-  margin: 0 0 25px;
+  line-height: 1.65;
+  margin: 0 0 24px;
 }
 .dialog-field {
   display: flex;
@@ -53,42 +62,51 @@
   gap: 8px;
   margin-bottom: 18px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 .dialog-field input,
 .dialog-field select {
-  min-height: 37px;
+  min-height: 40px;
+  font-size: 14px;
 }
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 24px;
 }
+.dialog-actions > button {
+  min-height: 36px;
+  font-size: 13px;
+}
 .dialog-close {
   position: absolute;
-  right: 15px;
-  top: 15px;
+  right: 12px;
+  top: 12px;
   background: transparent;
   color: var(--subtle);
-  padding: 4px;
-  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
   display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .dialog-close:hover {
   background: var(--surface-hover);
 }
 .command-dialog {
   padding: 0;
-  width: min(510px, calc(100% - 32px));
-  top: 28%;
+  width: min(560px, calc(100% - 32px));
+  top: min(260px, 38%);
 }
 .command-search {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 18px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-soft);
   color: var(--subtle);
 }
 .command-search input {
@@ -99,55 +117,105 @@
   color: var(--text);
   padding: 0;
   box-shadow: none;
-  font-size: 12px;
+  font-size: 15px;
+}
+.command-search input:focus-visible {
+  outline-offset: 5px;
 }
 .key-close {
   font-family: inherit;
-  font-size: 9px;
+  font-size: 11px;
   color: var(--subtle);
   border: 1px solid var(--border);
-  border-radius: 3px;
-  padding: 3px 4px;
+  border-radius: 5px;
+  padding: 4px 6px;
   background: var(--well);
 }
 .command-list {
   padding: 8px;
+  max-height: min(380px, 50dvh);
+  overflow: auto;
 }
-.command-list > button {
+.command-list > button,
+.command-list > [role="option"] {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   width: 100%;
-  padding: 12px 10px;
+  min-height: 42px;
+  padding: 11px 12px;
   background: transparent;
-  border-radius: 5px;
-  font-size: 12px;
+  border-radius: 8px;
+  font-size: 13px;
   text-align: left;
 }
 .command-list > button:hover,
-.command-list > button:focus-visible {
+.command-list > button:focus-visible,
+.command-list > [aria-selected="true"] {
   background: var(--accent-soft);
   color: var(--accent);
 }
 .command-list > p {
   color: var(--subtle);
+  font-size: 13px;
   padding: 12px;
+}
+.command-hint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border-soft);
+  color: var(--subtle);
+  font-size: 11px;
+}
+.command-hint kbd {
+  color: var(--muted);
 }
 .provider-message {
   display: flex;
   gap: 10px;
   background: var(--well);
-  padding: 15px;
+  padding: 16px;
   border: 1px solid var(--border-soft);
-  border-radius: 8px;
+  border-radius: 10px;
   align-items: baseline;
   margin-bottom: 16px;
 }
 .provider-message p {
-  font-size: 11px;
-  line-height: 1.8;
+  font-size: 13px;
+  line-height: 1.65;
   color: var(--muted);
   margin: 0;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+}
+@media (max-width: 600px) {
+  .dialog-content {
+    padding: 24px;
+  }
+  .command-dialog {
+    padding: 0;
+  }
+  .dialog-content h2 {
+    font-size: 21px;
+  }
+}
+
+.dialog-error {
+  color: var(--error-text);
+  background: var(--error-bg);
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  margin: 0 0 16px;
+}
+.command-empty {
+  padding: 16px 12px;
+  color: var(--muted);
+  font-size: 13px;
 }

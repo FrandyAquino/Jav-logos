@@ -10,7 +10,6 @@ import {
   AlertCircle,
   ArrowDownToLine,
   Check,
-  Command,
   Cpu,
   LoaderCircle,
   Moon,
@@ -24,21 +23,40 @@ import { useStudio } from "../application/use-studio";
 import { BrandSidebar } from "./brand-sidebar";
 import { CreativeCanvas } from "./creative-canvas";
 import { Inspector } from "./inspector";
-import { IconButton, Mark } from "./ui";
+import { IconButton, Mark, shortcutModifier } from "./ui";
+import { CommandPalette, type StudioCommand } from "./command-palette";
 
 export function Studio() {
   const studio = useStudio();
   const recoveryInput = useRef<HTMLInputElement>(null);
+  const commandOrigin = useRef<HTMLElement | null>(null);
+  const dialogOrigin = useRef<HTMLElement | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [createFailed, setCreateFailed] = useState(false);
   const [newName, setNewName] = useState("");
   const [parentId, setParentId] = useState("");
   const [commandsOpen, setCommandsOpen] = useState(false);
-  const [commandSearch, setCommandSearch] = useState("");
   const [providerOpen, setProviderOpen] = useState(false);
+  const [checkingProvider, setCheckingProvider] = useState(false);
   const [leftWidth, setLeftWidth] = useState(224);
   const [rightWidth, setRightWidth] = useState(288);
+  const rememberDialogOrigin = () => {
+    dialogOrigin.current = commandsOpen
+      ? commandOrigin.current
+      : document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+  };
+  const restoreDialogFocus = (event: Event) => {
+    event.preventDefault();
+    const target = dialogOrigin.current;
+    if (target?.isConnected) target.focus();
+    else document.querySelector<HTMLButtonElement>(".command-trigger")?.focus();
+  };
   const openCreate = (parent?: string) => {
+    rememberDialogOrigin();
+    setCreateFailed(false);
     setNewName("");
     setParentId(parent ?? "");
     setCreateOpen(true);
@@ -46,12 +64,35 @@ export function Studio() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
+      if (event.isComposing) return;
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        setCommandsOpen((open) => !open);
+        if (createOpen || providerOpen) return;
+        if (!commandsOpen)
+          commandOrigin.current =
+            document.activeElement instanceof HTMLElement
+              ? document.activeElement
+              : null;
+        setCommandsOpen(!commandsOpen);
       }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "n") {
         event.preventDefault();
+        if (
+          creating ||
+          studio.busy ||
+          !studio.ready ||
+          createOpen ||
+          providerOpen ||
+          commandsOpen
+        )
+          return;
+        setCommandsOpen(false);
+        setProviderOpen(false);
+        dialogOrigin.current =
+          document.activeElement instanceof HTMLElement
+            ? document.activeElement
+            : null;
+        setCreateFailed(false);
         setNewName("");
         setParentId("");
         setCreateOpen(true);
@@ -59,7 +100,24 @@ export function Studio() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [
+    commandsOpen,
+    createOpen,
+    providerOpen,
+    creating,
+    studio.busy,
+    studio.ready,
+  ]);
+
+  const checkProvider = async () => {
+    if (checkingProvider) return;
+    setCheckingProvider(true);
+    try {
+      await studio.refreshProvider();
+    } finally {
+      setCheckingProvider(false);
+    }
+  };
 
   const resize = (
     side: "left" | "right",
@@ -85,14 +143,20 @@ export function Studio() {
     element.addEventListener("pointercancel", end);
   };
 
-  const commands = [
+  const commands: StudioCommand[] = [
     {
       label: "Import recovery copy",
       run: () => recoveryInput.current?.click(),
     },
-    { label: "Create a brand", shortcut: "⌘ N", run: () => openCreate() },
+    {
+      label: "Create a brand",
+      shortcut: `${shortcutModifier} N`,
+      opensDialog: true,
+      run: () => openCreate(),
+    },
     {
       label: "Create a sub-brand",
+      opensDialog: true,
       disabled: !studio.selectedBrand,
       run: () => openCreate(studio.selectedBrand?.id),
     },
@@ -108,8 +172,10 @@ export function Studio() {
     },
     {
       label: "Check local AI provider",
+      opensDialog: true,
       run: () => {
-        void studio.refreshProvider();
+        rememberDialogOrigin();
+        void checkProvider();
         setProviderOpen(true);
       },
     },
@@ -117,13 +183,17 @@ export function Studio() {
       label: `Switch to ${studio.theme === "dark" ? "light" : "dark"} theme`,
       run: () => studio.setTheme(studio.theme === "dark" ? "light" : "dark"),
     },
-  ].filter((command) =>
-    command.label.toLowerCase().includes(commandSearch.toLowerCase()),
-  );
+  ].map((command) => ({
+    ...command,
+    disabled: command.disabled || studio.busy || creating || !studio.ready,
+  }));
 
   return (
     <div
       className="studio"
+      data-native-macos={
+        studio.native && /Mac/.test(navigator.platform) ? true : undefined
+      }
       data-theme={studio.theme}
       style={
         {
@@ -136,7 +206,8 @@ export function Studio() {
         ref={recoveryInput}
         type="file"
         accept="application/json,.json"
-        className="visually-hidden"
+        hidden
+        tabIndex={-1}
         aria-label="Recovery copy"
         onChange={(event) => {
           const file = event.target.files?.[0];
@@ -144,7 +215,7 @@ export function Studio() {
           event.target.value = "";
         }}
       />
-      <header className="topbar">
+      <header className="topbar" data-tauri-drag-region>
         <div className="wordmark" aria-label="JavLogos brand identity studio">
           <Mark small />
           <strong>
@@ -155,14 +226,16 @@ export function Studio() {
         <button
           type="button"
           className="command-trigger"
-          onClick={() => {
-            setCommandSearch("");
+          aria-label="Search commands"
+          title={`Search commands (${shortcutModifier} K)`}
+          onClick={(event) => {
+            commandOrigin.current = event.currentTarget;
             setCommandsOpen(true);
           }}
         >
           <Search size={13} />
           <span>Search commands</span>
-          <kbd>⌘ K</kbd>
+          <kbd>{shortcutModifier} K</kbd>
         </button>
         <div className="topbar-actions">
           <IconButton
@@ -269,6 +342,8 @@ export function Studio() {
         <div className="save-status" role="status">
           {studio.busy ? (
             <LoaderCircle size={12} className="spin" />
+          ) : studio.error || studio.pendingConcepts.length ? (
+            <AlertCircle size={12} />
           ) : (
             <Check size={12} />
           )}
@@ -277,7 +352,10 @@ export function Studio() {
         <button
           type="button"
           className="provider-status"
-          onClick={() => setProviderOpen(true)}
+          onClick={() => {
+            rememberDialogOrigin();
+            setProviderOpen(true);
+          }}
         >
           <span
             className={`status-dot ${studio.providerHealth.available ? "ready" : ""}`}
@@ -304,28 +382,32 @@ export function Studio() {
       >
         <Dialog.Portal>
           <Dialog.Overlay className="dialog-overlay" />
-          <Dialog.Content className="dialog-content" data-theme={studio.theme}>
+          <Dialog.Content
+            className="dialog-content"
+            data-theme={studio.theme}
+            onCloseAutoFocus={restoreDialogFocus}
+          >
             <div className="dialog-icon">
               <Plus size={22} />
             </div>
             <Dialog.Title>Create a brand</Dialog.Title>
             <Dialog.Description>
-              A new identity, with its own character and a place in your brand
-              family.
+              Name this identity and choose whether it inherits from another
+              brand.
             </Dialog.Description>
             <form
               onSubmit={async (event) => {
                 event.preventDefault();
                 if (!newName.trim() || creating) return;
                 setCreating(true);
+                setCreateFailed(false);
                 try {
-                  if (
-                    await studio.createBrand(
-                      newName.trim(),
-                      parentId || undefined,
-                    )
-                  )
-                    setCreateOpen(false);
+                  const created = await studio.createBrand(
+                    newName.trim(),
+                    parentId || undefined,
+                  );
+                  if (created) setCreateOpen(false);
+                  else setCreateFailed(true);
                 } finally {
                   setCreating(false);
                 }
@@ -336,6 +418,7 @@ export function Studio() {
                 <input
                   autoFocus
                   required
+                  disabled={creating}
                   maxLength={100}
                   placeholder="e.g. JavCollections"
                   value={newName}
@@ -345,6 +428,7 @@ export function Studio() {
               <label className="dialog-field">
                 Brand family
                 <select
+                  disabled={creating}
                   value={parentId}
                   onChange={(event) => setParentId(event.target.value)}
                 >
@@ -356,9 +440,19 @@ export function Studio() {
                   ))}
                 </select>
               </label>
+              {createFailed && (
+                <p className="dialog-error" role="alert">
+                  {studio.error ||
+                    "The brand could not be saved. Resolve the workspace error and try again."}
+                </p>
+              )}
               <div className="dialog-actions">
                 <Dialog.Close asChild>
-                  <button type="button" className="subtle-button">
+                  <button
+                    type="button"
+                    className="subtle-button"
+                    disabled={creating}
+                  >
                     Cancel
                   </button>
                 </Dialog.Close>
@@ -374,6 +468,7 @@ export function Studio() {
             <Dialog.Close
               className="dialog-close"
               aria-label="Close create brand dialog"
+              disabled={creating}
             >
               <X size={17} />
             </Dialog.Close>
@@ -381,60 +476,22 @@ export function Studio() {
         </Dialog.Portal>
       </Dialog.Root>
 
-      <Dialog.Root open={commandsOpen} onOpenChange={setCommandsOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="dialog-overlay" />
-          <Dialog.Content
-            className="dialog-content command-dialog"
-            data-theme={studio.theme}
-          >
-            <Dialog.Title className="visually-hidden">
-              Command palette
-            </Dialog.Title>
-            <Dialog.Description className="visually-hidden">
-              Search and run a studio command.
-            </Dialog.Description>
-            <div className="command-search">
-              <Command size={18} />
-              <input
-                autoFocus
-                aria-label="Search commands"
-                placeholder="What would you like to do?"
-                value={commandSearch}
-                onChange={(event) => setCommandSearch(event.target.value)}
-              />
-              <Dialog.Close
-                className="key-close"
-                aria-label="Close command palette"
-              >
-                esc
-              </Dialog.Close>
-            </div>
-            <div className="command-list">
-              {commands.map((command) => (
-                <button
-                  type="button"
-                  key={command.label}
-                  disabled={command.disabled || studio.busy}
-                  onClick={() => {
-                    setCommandsOpen(false);
-                    command.run();
-                  }}
-                >
-                  <span>{command.label}</span>
-                  {command.shortcut && <kbd>{command.shortcut}</kbd>}
-                </button>
-              ))}
-              {!commands.length && <p>No matching commands.</p>}
-            </div>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <CommandPalette
+        open={commandsOpen}
+        onOpenChange={setCommandsOpen}
+        theme={studio.theme}
+        commands={commands}
+        returnFocus={() => commandOrigin.current?.focus()}
+      />
 
       <Dialog.Root open={providerOpen} onOpenChange={setProviderOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="dialog-overlay" />
-          <Dialog.Content className="dialog-content" data-theme={studio.theme}>
+          <Dialog.Content
+            className="dialog-content"
+            data-theme={studio.theme}
+            onCloseAutoFocus={restoreDialogFocus}
+          >
             <div className="dialog-icon">
               <Cpu size={22} />
             </div>
@@ -461,9 +518,14 @@ export function Studio() {
               <button
                 type="button"
                 className="primary-button"
-                onClick={() => void studio.refreshProvider()}
+                disabled={checkingProvider}
+                onClick={() => void checkProvider()}
               >
-                <RefreshCw size={14} /> Check again
+                <RefreshCw
+                  size={14}
+                  className={checkingProvider ? "spin" : undefined}
+                />{" "}
+                {checkingProvider ? "Checking…" : "Check again"}
               </button>
             </div>
             <Dialog.Close

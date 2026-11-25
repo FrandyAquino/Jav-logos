@@ -2,9 +2,7 @@ import { useState } from "react";
 import {
   Grid2X2,
   Image,
-  Layers3,
   Maximize,
-  MousePointer2,
   Plus,
   ScanLine,
   Sparkles,
@@ -36,6 +34,12 @@ export function CreativeCanvas({
     (concept) => concept.brandId === studio.selectedBrand?.id,
   );
   const selected = studio.selectedConcept;
+  const effectiveView =
+    view === "trace" && selected?.tracedSvg
+      ? "trace"
+      : view === "image" && selected?.raster
+        ? "image"
+        : "vector";
   const parent = studio.workspace.brands.find(
     (brand) => brand.id === studio.selectedBrand?.parentId,
   );
@@ -56,7 +60,7 @@ export function CreativeCanvas({
             </span>
           )}
         </div>
-        <div className="view-switch" aria-label="Workspace view">
+        <div className="view-switch" role="group" aria-label="Workspace view">
           <IconButton
             label="Canvas view"
             active={!gallery}
@@ -78,26 +82,14 @@ export function CreativeCanvas({
           <div className="welcome-emblem">
             <Mark />
           </div>
-          <span className="eyebrow">JAVCOLLECTIONS / CREATIVE TOOLS</span>
-          <h1>
-            A distinct identity.
-            <br />A connected family.
-          </h1>
+          <h1>Create a home for your brand</h1>
           <p>
-            Explore logos, shape your visual language, and build brands that
-            belong together.
+            Start with a name and a visual direction. Add related brands as your
+            identity grows.
           </p>
           <button type="button" className="primary-button" onClick={onCreate}>
             <Plus size={16} /> Create your first brand
           </button>
-          <div className="welcome-details">
-            <span>
-              <Layers3 size={14} /> Inherited Brand DNA
-            </span>
-            <span>
-              <MousePointer2 size={14} /> Editable vectors
-            </span>
-          </div>
         </div>
       ) : !concepts.length ? (
         <div className="empty-canvas">
@@ -105,9 +97,10 @@ export function CreativeCanvas({
             <span className="artboard-corner top-left" />
             <span className="artboard-corner bottom-right" />
             <Mark />
-            <h2>Room for a new idea.</h2>
+            <h2>Explore your first concepts</h2>
             <p>
-              Describe your brand below and explore your first set of concepts.
+              Describe a direction below. Choose geometric concepts for editable
+              vectors, or local AI for generated images.
             </p>
           </div>
         </div>
@@ -118,6 +111,7 @@ export function CreativeCanvas({
               type="button"
               className={`gallery-card ${concept.id === selected?.id ? "selected" : ""}`}
               key={concept.id}
+              aria-pressed={concept.id === selected?.id}
               onClick={() => {
                 studio.selectConcept(concept.id);
                 setGallery(false);
@@ -141,55 +135,71 @@ export function CreativeCanvas({
           <div className="artboard-meta">
             <span>{selected.name}</span>
             <span>
-              {selected.raster ? "LOCAL AI" : "GEOMETRIC"}{" "}
+              {selected.raster ? "Local AI" : "Geometric"}{" "}
               <span className="meta-dot">·</span>{" "}
-              {selected.tracedSvg && view === "trace"
-                ? "TRACED SVG"
-                : selected.raster && view === "image"
-                  ? "RASTER"
-                  : "VECTOR"}
+              {effectiveView === "trace"
+                ? "Traced SVG"
+                : effectiveView === "image"
+                  ? "Original image"
+                  : "Editable composition"}
             </span>
           </div>
           <div className={`artboard ${previewBackground}`}>
             <img
               className="main-artwork"
-              src={artwork(selected, view)}
-              alt={`${selected.name} ${view === "image" ? "generated image" : "vector composition"}`}
+              src={artwork(selected, effectiveView)}
+              alt={`${selected.name}: ${effectiveView === "image" ? "original generated image" : effectiveView === "trace" ? "traced vector" : "editable vector composition"}`}
             />
           </div>
           <div className="canvas-options">
-            <div className="canvas-backgrounds" aria-label="Canvas surround">
+            <div
+              className="canvas-backgrounds"
+              role="group"
+              aria-label="Canvas surround"
+            >
               <button
                 type="button"
                 className={`background-swatch paper ${previewBackground === "paper" ? "active" : ""}`}
                 aria-label="Light canvas surround"
+                title="Light canvas surround"
+                aria-pressed={previewBackground === "paper"}
                 onClick={() => setPreviewBackground("paper")}
               />
               <button
                 type="button"
                 className={`background-swatch dark ${previewBackground === "dark" ? "active" : ""}`}
                 aria-label="Dark canvas surround"
+                title="Dark canvas surround"
+                aria-pressed={previewBackground === "dark"}
                 onClick={() => setPreviewBackground("dark")}
               />
               <button
                 type="button"
                 className={`background-swatch grid ${previewBackground === "grid" ? "active" : ""}`}
                 aria-label="Checkerboard canvas surround"
+                title="Checkerboard canvas surround"
+                aria-pressed={previewBackground === "grid"}
                 onClick={() => setPreviewBackground("grid")}
               />
             </div>
             {selected.raster && (
-              <div className="segmented-control">
+              <div
+                className="segmented-control"
+                role="group"
+                aria-label="Artwork format"
+              >
                 <button
                   type="button"
-                  className={view === "image" ? "active" : ""}
+                  className={effectiveView === "image" ? "active" : ""}
+                  aria-pressed={effectiveView === "image"}
                   onClick={() => setView("image")}
                 >
                   <Image size={12} /> Original
                 </button>
                 <button
                   type="button"
-                  className={view === "vector" ? "active" : ""}
+                  className={effectiveView === "vector" ? "active" : ""}
+                  aria-pressed={effectiveView === "vector"}
                   onClick={() => setView("vector")}
                 >
                   <ScanLine size={12} /> Composition
@@ -197,7 +207,8 @@ export function CreativeCanvas({
                 {selected.tracedSvg && (
                   <button
                     type="button"
-                    className={view === "trace" ? "active" : ""}
+                    className={effectiveView === "trace" ? "active" : ""}
+                    aria-pressed={effectiveView === "trace"}
                     onClick={() => setView("trace")}
                   >
                     <ScanLine size={12} /> Trace

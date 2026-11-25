@@ -13,13 +13,15 @@ The isolated Python environment is `workers/.venv`. Ignored `workers/config.loca
 ## Verification entry points
 
 - `npm run check`: TypeScript, lint, 14 tests and Vite build.
-- `npm run test:e2e`: three real Chromium flows; writes ignored screenshots, brand ZIP and recovery JSON.
+- `npm run test:e2e`: six real Chromium flows, including typography/accessibility/keyboard/compact-layout checks; writes ignored screenshots, brand ZIP and recovery JSON.
 - `cargo test --manifest-path src-tauri/Cargo.toml --locked --lib`: 15 tests.
 - `cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings`.
 - `workers/.venv/bin/python -m unittest discover -s workers/tests`: nine tests.
 - `workers/.venv/bin/python workers/smoke.py`: actual model invocation; not part of fast CI.
 
 See `native-acceptance.md` and `docs/research/ai-runtime.md` for executed native and inference evidence. `artifacts/` and `workers/artifacts/` are ignored inspection outputs. Keep source checks, browser preview, native acceptance and production release evidence separate.
+
+UI continuation: read `ui-refinement.md`, `docs/design/system.md` and `docs/research/ui-skills-and-typography.md`. The refined build includes bundled Google Sans Flex, floating blue/slate panels, improved keyboard interaction and macOS overlay titlebar with native controls. `.agents/agents/` now includes visual-director, interaction-engineer and visual-QA briefs.
 
 ## Next release work
 

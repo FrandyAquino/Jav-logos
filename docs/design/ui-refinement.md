@@ -1,6 +1,6 @@
 # JavParlance-inspired workspace refinement
 
-User-directed, 2026-11-25. Mode: Operate. Preserve the three-panel studio, real workflows, provider provenance, native window controls and local-first architecture. Refine the palette, readable type and interaction hierarchy; this is not a marketing page.
+User-directed, 2026-11-25. Mode: Operate. Preserve the three-panel studio, real workflows, provider provenance, native window controls and local-first architecture. Refine the palette, readable type and interaction hierarchy; this is not a marketing page. Native QA refined the macOS header to an overlay while preserving native traffic-light controls; it avoids a system title strip that did not follow the page palette reliably.
 
 ## Verified references
 
@@ -11,7 +11,7 @@ Gemini's current primary UI stack is Google Sans Flex, Google Sans, Helvetica Ne
 ## Direction
 
 - Preserve branding mark. Quiet blue-steel palette instead of purple-dominant controls. Dark shell in ink/slate, light shell in cool off-white; artwork stays independent.
-- Floating sidebar, central work surface and inspector, separated by 8px gutters with accessible resize hit areas. Native titlebar retained. Glass is a CSS material with an opaque fallback, not a claim of system vibrancy.
+- Floating sidebar, central work surface and inspector, separated by8px gutters with accessible resize hit areas. Native window controls remain; macOS integrates them into an overlay header. Glass is a CSS material with an opaque fallback, not a claim of system vibrancy.
 - Google Sans Flex, optical sizing auto, weights400/500/600. Body and input text13–14px; supporting labels11–12px minimum. No shrinking to7–9px at compact widths.
 - Use accent only for primary generation action, selection and focus. Semantic success/warning/error remain distinct. Text4.5:1 minimum; UI focus and control boundaries3:1.
 - Reduce decorative marketing copy, tiny uppercase eyebrows and duplicated badges. Empty states should teach brand creation/generation. Controls use literal action labels.
