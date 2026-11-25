@@ -47,4 +47,4 @@ No repository remote was configured, no PR was published, and CI jobs have not r
 
 ## Workspace workflow continuation
 
-See `workspace-workflow.md` for custom controls, brand lifecycle/pinning, attachments, fonts and live generation diagnostics. Real native two-image512px generation was observed with steps/logs and saved successfully; native font-export/dialog follow-up remains unverified after computer-use lost the window.
+See `workspace-workflow.md` for custom controls, brand lifecycle/pinning, attachments, fonts and live generation diagnostics. Real native two-image512px generation was observed with steps/logs and saved successfully; native Manrope SVG export/dialog follow-up subsequently passed, including embedded-font hash and license checks.
