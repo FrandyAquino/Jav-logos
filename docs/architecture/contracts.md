@@ -34,3 +34,9 @@ Infrastructure selects composition assets and embeds approved fonts; imported ma
 Brand-book HTML exports contain escaped copy and self-contained image/font assets without scripts. Native export permits svg/png/zip/json/html only. Motion SVG comes from the trusted primitive renderer; no user-authored animation code is evaluated. See `../planning/brand-studio-expansion.md` for the complete feature contract.
 
 `deleteConcept(id): Promise<boolean>` removes only that concept via the serialized workspace save. Failure retains both the record and selection. Success clears its session history and selects an adjacent concept from the same brand only when necessary. Per-ID in-flight guards prevent duplicate deletion writes; native schema/IPC remain unchanged. Asset garbage collection and deletion of independently exported files are not part of this action.
+
+## Delivery preparation
+
+Additive document flags `transparentBackground`, `autoFitText`, `useCutout` and uniform `wordmarkFit`/`sloganFit` factors (0.001–1) preserve legacy behavior when absent. Concept `cutout` is a validated/stored PNG; `derivedFrom` is a provenance identifier, not a live foreign key. Current documents and versions with `useCutout` require the asset. Removing a source concept does not invalidate its independent derivative.
+
+Auto-fit recomputes inside the serialized edit transform and again for exported arrangements using actual loaded font metrics. Cutout processing runs in a cancellable Web Worker; `saveCutout(id,png)` creates an independent concept, never overwrites the original, and guards duplicate calls. Native PNG asset storage includes cutouts. `exportDelivery(id,variants,outlined)` captures the source and exports a user-selected ZIP; `exportOutlinedSvg` uses bundled font files and glyph paths without font substitution. See `../planning/delivery-preparation.md` for bounds and `../research/font-outlines.md` for verified dependency/license details.

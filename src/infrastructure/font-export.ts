@@ -1,3 +1,4 @@
+import { fitDocumentText } from "./text-fitting";
 import manifest from "../../shared/font-assets.json";
 import { renderSvg } from "../domain/vector";
 import type { VectorDocument } from "../domain/types";
@@ -6,7 +7,7 @@ const binaryCache = new Map<string, Promise<Uint8Array>>();
 export function bundledFont(family: string) {
   return manifest.find((font) => font.family === family);
 }
-async function bytes(path: string): Promise<Uint8Array> {
+export async function fontBytes(path: string): Promise<Uint8Array> {
   let request = binaryCache.get(path);
   if (!request) {
     request = fetch(path).then(async (response) => {
@@ -32,13 +33,18 @@ function base64(data: Uint8Array) {
 }
 export async function fontLicense(family: string): Promise<string | null> {
   const font = bundledFont(family);
-  return font ? new TextDecoder().decode(await bytes(font.licensePath)) : null;
+  return font
+    ? new TextDecoder().decode(await fontBytes(font.licensePath))
+    : null;
 }
 export async function prepareCompositionSvg(
   document: VectorDocument,
   symbolDataUrl?: string,
 ): Promise<string> {
-  return embedFont(renderSvg(document, symbolDataUrl), document.fontFamily);
+  return embedFont(
+    renderSvg(await fitDocumentText(document), symbolDataUrl),
+    document.fontFamily,
+  );
 }
 export async function embedFont(svg: string, family: string): Promise<string> {
   const font = bundledFont(family);
@@ -46,7 +52,7 @@ export async function embedFont(svg: string, family: string): Promise<string> {
   const declarations = await Promise.all(
     font.faces.map(
       async (face: FontAsset) =>
-        `@font-face{font-family:${JSON.stringify(font.family)};font-style:normal;font-weight:${face.weight};src:url(data:font/woff2;base64,${base64(await bytes(face.path))}) format('woff2');unicode-range:${face.unicodeRange};}`,
+        `@font-face{font-family:${JSON.stringify(font.family)};font-style:normal;font-weight:${face.weight};src:url(data:font/woff2;base64,${base64(await fontBytes(face.path))}) format('woff2');unicode-range:${face.unicodeRange};}`,
     ),
   );
   const license = await fontLicense(font.family);

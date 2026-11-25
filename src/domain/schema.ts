@@ -82,6 +82,11 @@ export const documentSchema = z
     text: z.string().max(120),
     primary: color,
     background: color,
+    transparentBackground: z.boolean().optional(),
+    autoFitText: z.boolean().optional(),
+    wordmarkFit: z.number().min(0.001).max(1).optional(),
+    sloganFit: z.number().min(0.001).max(1).optional(),
+    useCutout: z.boolean().optional(),
     fontFamily: font,
     scale: z.number().min(0.3).max(2),
     rotation: z.number().min(-180).max(180),
@@ -149,6 +154,8 @@ export const conceptSchema = z.object({
   createdAt: z.string().max(64),
   document: documentSchema,
   raster: png.optional(),
+  cutout: png.optional(),
+  derivedFrom: identifier.optional(),
   reference: png.optional(),
   generationContext: z
     .object({
@@ -211,6 +218,7 @@ export const workspaceSchema = z
         ...concept.versions.map((v) => v.document),
       ]) {
         if (
+          (doc.useCutout && !concept.cutout) ||
           (doc.symbolSource === "image" && !concept.raster) ||
           (doc.symbolSource === "trace" && !concept.tracedSvg)
         )

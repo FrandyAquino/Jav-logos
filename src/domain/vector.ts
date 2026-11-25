@@ -52,6 +52,11 @@ function legacySvg(doc: VectorDocument): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480"><rect width="640" height="480" fill="${escapeXml(doc.background)}"/><g transform="translate(320 198) rotate(${doc.rotation}) scale(${doc.scale})" fill="${escapeXml(doc.primary)}" stroke="${escapeXml(doc.primary)}" stroke-width="${doc.strokeWidth}">${geometry(doc)}</g><text x="320" y="356" text-anchor="middle" fill="${escapeXml(doc.primary)}" font-family="${escapeXml(doc.fontFamily)}" font-size="38" font-weight="500" letter-spacing="${doc.letterSpacing}">${escapeXml(doc.text)}</text></svg>`;
 }
 const expandedFields: (keyof VectorDocument)[] = [
+  "transparentBackground",
+  "autoFitText",
+  "wordmarkFit",
+  "sloganFit",
+  "useCutout",
   "layout",
   "slogan",
   "symbolSource",
@@ -124,14 +129,18 @@ export function renderSvg(doc: VectorDocument, symbolDataUrl?: string): string {
         .join("");
     } else symbol = geometry(doc);
   }
+  const textTransform = (x: number, y: number, scale: number | undefined) =>
+    doc.autoFitText && scale !== undefined && scale < 1
+      ? ` transform="translate(${x} ${y}) scale(${scale}) translate(${-x} ${-y})"`
+      : "";
   const wordmark = hasWordmark
-    ? `<g data-part="wordmark"><text x="${wordX}" y="${wordY}" text-anchor="${anchor}" fill="${escapeXml(doc.primary)}" font-family="${escapeXml(doc.fontFamily)}" font-size="${doc.wordmarkSize ?? 38}" font-weight="500" letter-spacing="${doc.letterSpacing}">${escapeXml(doc.text)}</text></g>`
+    ? `<g data-part="wordmark"><text${textTransform(wordX, wordY, doc.wordmarkFit)} x="${wordX}" y="${wordY}" text-anchor="${anchor}" fill="${escapeXml(doc.primary)}" font-family="${escapeXml(doc.fontFamily)}" font-size="${doc.wordmarkSize ?? 38}" font-weight="500" letter-spacing="${doc.letterSpacing}">${escapeXml(doc.text)}</text></g>`
     : "";
   const slogan =
     layout !== "symbol" && doc.showSlogan !== false && doc.slogan
-      ? `<g data-part="slogan"><text x="${sloganX}" y="${sloganY}" text-anchor="${anchor}" fill="${escapeXml(doc.primary)}" font-family="${escapeXml(doc.fontFamily)}" font-size="${doc.sloganSize ?? 18}" font-weight="400">${escapeXml(doc.slogan)}</text></g>`
+      ? `<g data-part="slogan"><text${textTransform(sloganX, sloganY, doc.sloganFit)} x="${sloganX}" y="${sloganY}" text-anchor="${anchor}" fill="${escapeXml(doc.primary)}" font-family="${escapeXml(doc.fontFamily)}" font-size="${doc.sloganSize ?? 18}" font-weight="400">${escapeXml(doc.slogan)}</text></g>`
       : "";
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480"><rect width="640" height="480" fill="${escapeXml(doc.background)}"/>${hasSymbol ? `<g data-part="symbol"><g transform="translate(${symbolX} ${symbolY}) rotate(${doc.rotation}) scale(${doc.scale})" fill="${escapeXml(doc.primary)}" stroke="${escapeXml(doc.primary)}" stroke-width="${doc.strokeWidth}">${symbol}</g></g>` : ""}${wordmark}${slogan}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">${doc.transparentBackground ? "" : `<rect width="640" height="480" fill="${escapeXml(doc.background)}"/>`}${hasSymbol ? `<g data-part="symbol"><g transform="translate(${symbolX} ${symbolY}) rotate(${doc.rotation}) scale(${doc.scale})" fill="${escapeXml(doc.primary)}" stroke="${escapeXml(doc.primary)}" stroke-width="${doc.strokeWidth}">${symbol}</g></g>` : ""}${wordmark}${slogan}</svg>`;
 }
 export function renderMotionSvg(
   doc: VectorDocument,

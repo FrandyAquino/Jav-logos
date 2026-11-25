@@ -47,7 +47,7 @@ export async function buildBrandBook(
           original ||
           image(
             await prepareCompositionSvg(
-              { ...concept.document, layout },
+              { ...concept.document, layout, autoFitText: true },
               compositionAsset(concept),
             ),
           ),

@@ -34,7 +34,13 @@ export function ConceptCard({
             <div className="gallery-art">
               <ConceptArtwork
                 concept={concept}
-                mode={concept.raster ? "image" : "vector"}
+                mode={
+                  concept.document.useCutout
+                    ? "vector"
+                    : concept.raster
+                      ? "image"
+                      : "vector"
+                }
                 alt=""
               />
             </div>
@@ -47,7 +53,13 @@ export function ConceptCard({
           <>
             <ConceptArtwork
               concept={concept}
-              mode={concept.raster ? "image" : "vector"}
+              mode={
+                concept.document.useCutout
+                  ? "vector"
+                  : concept.raster
+                    ? "image"
+                    : "vector"
+              }
               alt=""
             />
             <span>{concept.name}</span>

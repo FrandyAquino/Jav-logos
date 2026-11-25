@@ -39,7 +39,13 @@ Local generation now shows actual worker stages, current image, sampling steps w
 
 If generation finishes but saving fails, keep the window open and choose **Retry save** or **Export recovery copy**. Import that JSON later through the command palette. Recovery import preserves concept IDs and does not rerun inference. Existing IDs are retained rather than overwritten.
 
-Generated raster typography can contain model errors. Composition wordmarks are editable text. Supported traces can be converted to editable Bézier paths with anchor/handle controls and undo/redo. Advanced boolean operations, font outlining and print certification remain outside the current delivery. Inspect long wordmarks and artwork bounds before export.
+Generated raster typography can contain model errors. Composition wordmarks are editable text. Supported traces can be converted to editable Bézier paths with anchor/handle controls and undo/redo. Prepare for delivery adds flat-background removal, automatic text fitting, transparent canvases, logo variants and font outlines using bundled typefaces. Advanced boolean operations and print certification remain outside the current delivery. Inspect small text and artwork bounds before export.
+
+## Prepare a logo for delivery
+
+In **Design → Prepare for delivery**, enable **Auto-fit name and slogan** and **Transparent canvas**. For an AI image with a uniform background, use **Remove flat background**, inspect the preview and save a new cutout concept. The original remains intact.
+
+Choose a bundled typeface such as Manrope or Google Sans Flex for **Outlined SVG**. **Logo variants** exports vertical/horizontal, black/white and favicon versions as SVG/PNG, with exact16/32/48px PNG icons, licenses and provenance. A raster symbol stays raster inside the SVG; outlining converts the text only. See [delivery evidence and limits](docs/progress/delivery-preparation.md).
 
 ## Verify
 

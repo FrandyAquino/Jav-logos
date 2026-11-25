@@ -76,6 +76,9 @@ export function CreativeCanvas({
     (concept) => concept.brandId === studio.selectedBrand?.id,
   );
   const selected = studio.selectedConcept;
+  useEffect(() => {
+    if (selected?.document.useCutout) setView("vector");
+  }, [selected?.id, selected?.document.useCutout]);
   const generationActive = generationIsActive(studio);
   const showActivity = generationActive && viewActivity;
   useEffect(() => {

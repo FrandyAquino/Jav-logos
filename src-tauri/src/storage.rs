@@ -107,9 +107,13 @@ impl Store {
         }
         let mut total = json.len();
         for concept in &mut snapshot.concepts {
-            for raster in [&mut concept.raster, &mut concept.reference]
-                .into_iter()
-                .flatten()
+            for raster in [
+                &mut concept.raster,
+                &mut concept.reference,
+                &mut concept.cutout,
+            ]
+            .into_iter()
+            .flatten()
             {
                 if let Some(hash) = raster.strip_prefix("asset:png:") {
                     let bytes = self.read_asset(hash, "png", 18 * 1024 * 1024)?;
@@ -165,9 +169,13 @@ impl Store {
             ));
         }
         for concept in &mut snapshot.concepts {
-            for raster in [&mut concept.raster, &mut concept.reference]
-                .into_iter()
-                .flatten()
+            for raster in [
+                &mut concept.raster,
+                &mut concept.reference,
+                &mut concept.cutout,
+            ]
+            .into_iter()
+            .flatten()
             {
                 let encoded = raster
                     .strip_prefix("data:image/png;base64,")
@@ -363,7 +371,7 @@ mod tests {
             "brands":[{"id":"brand-a","name":"Brand","parentId":null,"dna":{},"createdAt":"2026-11-25","status":"completed","pinned":true,"order":2,"icon":"spark"}],
             "concepts":[{"id":"concept-a","brandId":"brand-a","name":"Concept","prompt":"Test","provider":"test","seed":42,"createdAt":"2026-11-25",
                 "document":{"shape":"orbit","text":"Brand","primary":"#112233","background":"#ffffff","fontFamily":"Manrope","scale":1,"rotation":0,"letterSpacing":0,"strokeWidth":2},
-                "raster":png,"reference":png,"tracedSvg":"<svg xmlns=\"http://www.w3.org/2000/svg\"/>","versions":[],
+                "raster":png,"reference":png,"cutout":png,"derivedFrom":"source-concept","tracedSvg":"<svg xmlns=\"http://www.w3.org/2000/svg\"/>","versions":[],
                 "generationContext":{"effectivePrompt":"A blue geometric logo","width":512,"height":512,"dna":{"palette":["#112233"],"typography":"Inter","geometry":"orbit","tone":"Calm"}}}]
         });
         store
@@ -376,6 +384,11 @@ mod tests {
         assert_eq!(snapshot.concepts[0].document.font_family, "Manrope");
         assert_eq!(snapshot.concepts[0].raster.as_deref(), Some(png));
         assert_eq!(snapshot.concepts[0].reference.as_deref(), Some(png));
+        assert_eq!(snapshot.concepts[0].cutout.as_deref(), Some(png));
+        assert_eq!(
+            snapshot.concepts[0].derived_from.as_deref(),
+            Some("source-concept")
+        );
         assert_eq!(
             snapshot.concepts[0]
                 .generation_context

@@ -5,7 +5,8 @@
 3. Choose **Local AI · FLUX** and **Symbol + editable text**. Start with one concept; use2–4 to explore alternatives.
 4. Enter a direction and Generate. The prompt clears on accepted send; Last sent prompt lets you reuse it. Activity shows actual local inference diagnostics.
 5. Switch to Composition to adjust the editable wordmark, slogan and symbol placement. Use the trash icon on a thumbnail or gallery card to remove an unwanted concept after confirmation.
-6. Export composition SVG/PNG, a brand kit or an HTML brand book. Inspect text bounds and contrast before final delivery.
+6. Use Design → Prepare for delivery for flat-background removal, auto-fit text, outlined fonts and logo variants/favicons. Save cutouts as new concepts to retain the original.
+7. Export composition SVG/PNG, a brand kit or an HTML brand book. Inspect text bounds and contrast before final delivery.
 
 Example for a JavCollections brand:
 

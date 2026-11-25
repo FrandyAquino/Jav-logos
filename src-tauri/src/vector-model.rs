@@ -41,6 +41,16 @@ pub struct VectorDocument {
     pub text: String,
     pub primary: String,
     pub background: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub transparent_background: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_fit_text: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub wordmark_fit: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub slogan_fit: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub use_cutout: Option<bool>,
     pub font_family: String,
     pub scale: f64,
     pub rotation: f64,
@@ -90,6 +100,13 @@ fn choice(value: &Option<String>, allowed: &[&str]) -> bool {
 impl VectorDocument {
     pub(crate) fn validate(&self) -> AppResult<()> {
         bounded(&self.text, 120, "Logo text")?;
+        if [self.wordmark_fit, self.slogan_fit]
+            .into_iter()
+            .flatten()
+            .any(|value| !number(value, 0.001, 1.0))
+        {
+            return Err(AppError::invalid("Text fitting scale exceeds bounds"));
+        }
         validate_font(&self.font_family)?;
         if !color(&self.primary)
             || !color(&self.background)
@@ -184,8 +201,9 @@ impl VectorDocument {
         }
         Ok(())
     }
-    pub(crate) fn validate_assets(&self, raster: bool, trace: bool) -> AppResult<()> {
-        if self.symbol_source.as_deref() == Some("image") && !raster
+    pub(crate) fn validate_assets(&self, raster: bool, trace: bool, cutout: bool) -> AppResult<()> {
+        if self.use_cutout == Some(true) && !cutout
+            || self.symbol_source.as_deref() == Some("image") && !raster
             || self.symbol_source.as_deref() == Some("trace") && !trace
         {
             return Err(AppError::invalid("Composition is missing its symbol asset"));
@@ -213,8 +231,17 @@ mod tests {
         doc.slogan = Some("Brand story".into());
         doc.symbol_source = Some("image".into());
         doc.validate().unwrap();
-        assert!(doc.validate_assets(false, false).is_err());
-        doc.validate_assets(true, false).unwrap();
+        assert!(doc.validate_assets(false, false, false).is_err());
+        doc.validate_assets(true, false, false).unwrap();
+        doc.use_cutout = Some(true);
+        assert!(doc.validate_assets(true, false, false).is_err());
+        doc.validate_assets(true, false, true).unwrap();
+        doc.wordmark_fit = Some(0.0);
+        assert!(doc.validate().is_err());
+        doc.wordmark_fit = Some(0.5);
+        doc.auto_fit_text = Some(true);
+        doc.transparent_background = Some(true);
+        doc.validate().unwrap();
         doc.monochrome = Some(true);
         assert!(doc.validate().is_err());
         doc.monochrome = None;

@@ -103,10 +103,11 @@ export function assessDesign(doc: VectorDocument): {
       });
   }
   if (textVisible && doc.text) {
-    const size = doc.wordmarkSize ?? 38;
+    const fit = doc.autoFitText ? (doc.wordmarkFit ?? 1) : 1;
+    const size = (doc.wordmarkSize ?? 38) * fit;
     const estimatedWidth =
       Array.from(doc.text).length * size * 0.62 +
-      Math.max(0, doc.text.length - 1) * doc.letterSpacing;
+      Math.max(0, doc.text.length - 1) * doc.letterSpacing * fit;
     const x =
       (layout === "horizontal" ? 285 : 320) + (doc.wordmarkOffsetX ?? 0);
     const y =

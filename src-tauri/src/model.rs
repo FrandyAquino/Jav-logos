@@ -83,6 +83,10 @@ pub struct Concept {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub raster: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub cutout: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub derived_from: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub reference: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub traced_svg: Option<String>,
@@ -219,6 +223,9 @@ impl Workspace {
                 return Err(AppError::invalid("Duplicate concept or missing brand"));
             }
             bounded(&concept.name, 120, "Concept name")?;
+            if let Some(source) = &concept.derived_from {
+                identifier(source)?;
+            }
             bounded(&concept.prompt, 4000, "Prompt")?;
             bounded(&concept.provider, 100, "Provider")?;
             if concept.seed > 9_007_199_254_740_991 {
@@ -239,9 +246,11 @@ impl Workspace {
             }
             bounded(&concept.created_at, 64, "Creation date")?;
             concept.document.validate()?;
-            concept
-                .document
-                .validate_assets(concept.raster.is_some(), concept.traced_svg.is_some())?;
+            concept.document.validate_assets(
+                concept.raster.is_some(),
+                concept.traced_svg.is_some(),
+                concept.cutout.is_some(),
+            )?;
             if let Some(notes) = &concept.notes {
                 bounded(notes, 3000, "Concept notes")?;
             }
@@ -256,11 +265,16 @@ impl Workspace {
                 }
                 bounded(&version.created_at, 64, "Version date")?;
                 version.document.validate()?;
-                version
-                    .document
-                    .validate_assets(concept.raster.is_some(), concept.traced_svg.is_some())?;
+                version.document.validate_assets(
+                    concept.raster.is_some(),
+                    concept.traced_svg.is_some(),
+                    concept.cutout.is_some(),
+                )?;
             }
-            for raster in [&concept.raster, &concept.reference].into_iter().flatten() {
+            for raster in [&concept.raster, &concept.reference, &concept.cutout]
+                .into_iter()
+                .flatten()
+            {
                 bounded(raster, 16_000_000, "Raster")?;
                 if !(raster.starts_with("data:image/png;base64,")
                     || stored && raster.starts_with("asset:png:"))

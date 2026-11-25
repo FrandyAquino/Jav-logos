@@ -56,6 +56,11 @@ export interface VectorDocument {
   text: string;
   primary: string;
   background: string;
+  transparentBackground?: boolean;
+  autoFitText?: boolean;
+  wordmarkFit?: number;
+  sloganFit?: number;
+  useCutout?: boolean;
   fontFamily: string;
   scale: number;
   rotation: number;
@@ -94,6 +99,8 @@ export interface Concept {
   createdAt: string;
   document: VectorDocument;
   raster?: string;
+  cutout?: string;
+  derivedFrom?: string;
   reference?: string;
   tracedSvg?: string;
   generationContext?: {

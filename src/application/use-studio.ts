@@ -29,6 +29,12 @@ import { compositionAsset } from "../infrastructure/composition";
 import { renderMotionSvg } from "../domain/vector";
 import { createStarterPaths } from "../domain/vector-paths";
 import { importTracePaths } from "../infrastructure/trace-import";
+import {
+  buildDeliveryKit,
+  type DeliveryVariant,
+} from "../infrastructure/delivery-variants";
+import { outlineComposition } from "../infrastructure/font-outlines";
+import { fitDocumentText } from "../infrastructure/text-fitting";
 import { buildBrandBook } from "../infrastructure/brand-book";
 
 interface StudioState {
@@ -99,6 +105,7 @@ let pendingWrites = 0;
 let referenceSequence = 0;
 let activeJob: string | null = null;
 const deletingConcepts = new Set<string>();
+const cutoutsInFlight = new Set<string>();
 const documentHistory = new Map<
   string,
   { undo: VectorDocument[]; redo: VectorDocument[] }
@@ -167,7 +174,7 @@ async function initialize() {
   ]);
 }
 async function persist(
-  transform: (workspace: Workspace) => Workspace,
+  transform: (workspace: Workspace) => Workspace | Promise<Workspace>,
   onSaved?: () => void,
 ): Promise<boolean> {
   pendingWrites++;
@@ -178,7 +185,7 @@ async function persist(
         "Workspace is unavailable. Reload the app after resolving the storage error.",
       );
     const current = get().workspace;
-    const next = workspaceSchema.parse(transform(current));
+    const next = workspaceSchema.parse(await transform(current));
     set({ status: "Saving…" });
     const revision = await desktop.saveWorkspace(next, current.revision);
     writeError = null;
@@ -609,20 +616,24 @@ const actions = {
     await guarded(async () => {
       let previous: VectorDocument | undefined;
       await persist(
-        (w) => ({
-          ...w,
-          concepts: w.concepts.map((c) =>
-            c.id === id
-              ? ((previous = structuredClone(c.document)),
-                {
-                  ...c,
-                  document: documentSchema.parse(
-                    replace ? captured : { ...c.document, ...captured },
-                  ),
-                })
-              : c,
-          ),
-        }),
+        async (w) => {
+          const concept = w.concepts.find((c) => c.id === id);
+          if (!concept) throw new Error("Select a concept first.");
+          previous = structuredClone(concept.document);
+          const document = documentSchema.parse(
+            await fitDocumentText(
+              documentSchema.parse(
+                replace ? captured : { ...concept.document, ...captured },
+              ),
+            ),
+          );
+          return {
+            ...w,
+            concepts: w.concepts.map((c) =>
+              c.id === id ? { ...c, document } : c,
+            ),
+          };
+        },
         () => {
           if (id && previous) {
             const history = historyFor(id);
@@ -780,6 +791,87 @@ const actions = {
           c.id === concept.id ? { ...c, tracedSvg } : c,
         ),
       }));
+    });
+    set({ busy: false });
+  },
+  async saveCutout(id: string, png: string): Promise<boolean> {
+    if (get().busy || cutoutsInFlight.has(id)) return false;
+    cutoutsInFlight.add(id);
+    let saved = false;
+    const newId = crypto.randomUUID();
+    await guarded(async () => {
+      saved = await persist(
+        async (w) => {
+          const original = w.concepts.find((c) => c.id === id);
+          if (!original?.raster)
+            throw new Error("The source image is no longer available.");
+          const derived: Concept = {
+            ...structuredClone(original),
+            id: newId,
+            derivedFrom: id,
+            name: `${original.name.slice(0, 108)} · cutout`,
+            createdAt: new Date().toISOString(),
+            cutout: png,
+            versions: [],
+            favorite: false,
+            document: await fitDocumentText({
+              ...original.document,
+              symbolSource: "image",
+              useCutout: true,
+              transparentBackground: true,
+              monochrome: false,
+              motion: "none",
+              autoFitText: true,
+            }),
+          };
+          return { ...w, concepts: [...w.concepts, derived] };
+        },
+        () => {
+          if (get().selectedConceptId === id) set({ selectedConceptId: newId });
+          set({ status: "Transparent concept saved; original preserved" });
+        },
+      );
+    });
+    cutoutsInFlight.delete(id);
+    return saved;
+  },
+  async exportDelivery(
+    id: string,
+    ids: DeliveryVariant[],
+    outlined: boolean,
+  ): Promise<boolean> {
+    if (get().busy) return false;
+    set({ busy: true, error: null, status: "Preparing delivery files…" });
+    let saved = false;
+    await guarded(async () => {
+      await flushWrites();
+      const concept = selectedConcept(id);
+      const bytes = await buildDeliveryKit(concept, [...ids], outlined);
+      saved = await desktop.exportFile(
+        fileName("-delivery.zip", concept.brandId),
+        bytes,
+      );
+      set({ status: saved ? "Logo variants exported" : "Export cancelled" });
+    });
+    set({ busy: false });
+    return saved;
+  },
+  async exportOutlinedSvg() {
+    if (get().busy) return;
+    set({ busy: true, error: null, status: "Converting text to outlines…" });
+    const id = get().selectedConceptId;
+    await guarded(async () => {
+      await flushWrites();
+      const concept = selectedConcept(id);
+      const svg = await outlineComposition(
+        concept.document,
+        compositionAsset(concept),
+      );
+      const saved = await desktop.exportFile(
+        fileName("-outlined.svg", concept.brandId),
+        new TextEncoder().encode(svg),
+      );
+      set({ status: saved ? "Outlined SVG exported" : "Export cancelled" });
     });
     set({ busy: false });
   },

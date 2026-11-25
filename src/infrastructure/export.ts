@@ -4,7 +4,12 @@ import { prepareCompositionSvg, fontLicense } from "./font-export";
 import type { Workspace } from "../domain/types";
 import { sanitizeSvg } from "./svg";
 import { compositionAsset } from "./composition";
-export async function rasterize(svg: string): Promise<Uint8Array> {
+export async function rasterize(
+  svg: string,
+  maxSize = 1280,
+): Promise<Uint8Array> {
+  if (!Number.isInteger(maxSize) || maxSize < 1 || maxSize > 4096)
+    throw new Error("Invalid PNG export size.");
   const image = new Image();
   const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
   try {
@@ -16,7 +21,7 @@ export async function rasterize(svg: string): Promise<Uint8Array> {
     });
     if (!image.naturalWidth || !image.naturalHeight)
       throw new Error("SVG has no usable dimensions.");
-    const ratio = 1280 / Math.max(image.naturalWidth, image.naturalHeight);
+    const ratio = maxSize / Math.max(image.naturalWidth, image.naturalHeight);
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(image.naturalWidth * ratio));
     canvas.height = Math.max(1, Math.round(image.naturalHeight * ratio));
@@ -60,6 +65,11 @@ export async function buildKit(
     if (concept.raster)
       files[`${prefix}-original.png`] = Uint8Array.from(
         atob(concept.raster.split(",")[1]),
+        (c) => c.charCodeAt(0),
+      );
+    if (concept.cutout)
+      files[`${prefix}-cutout.png`] = Uint8Array.from(
+        atob(concept.cutout.split(",")[1]),
         (c) => c.charCodeAt(0),
       );
     if (concept.reference)

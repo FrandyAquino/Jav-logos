@@ -15,6 +15,7 @@ import { Field, shapes, type StudioState } from "./ui";
 import { ColorField, TextField, RangeField } from "./property-fields";
 import { FontPicker } from "./font-picker";
 import { SelectField } from "./select-field";
+import { PreparationControls } from "./preparation-controls";
 import { CompositionControls } from "./composition-controls";
 export function ConceptInspector({ studio }: { studio: StudioState }) {
   const concept = studio.selectedConcept;
@@ -89,6 +90,7 @@ export function ConceptInspector({ studio }: { studio: StudioState }) {
         />
       </div>
       <CompositionControls studio={studio} />
+      <PreparationControls key={concept.id} studio={studio} />
       <div className="inspector-section">
         <h3>Transform</h3>
         <Field
