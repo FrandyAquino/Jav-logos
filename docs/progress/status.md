@@ -8,19 +8,19 @@ Three-panel desktop studio, dark/light themes, resizable panels, command palette
 
 Local inference uses existing GGUF weights through stable-diffusion.cpp Metal. The preferred files were not a complete Diffusers snapshot, so no redundant model download was required. ComfyUI and Diffusers adapters exist but are not live-inference certified.
 
-| Executed check | Result |
-| --- | --- |
-| TypeScript tests | 18 passed after workflow update |
-| Rust tests | 21 passed after workflow update |
-| Python tests | 11 passed after workflow update |
-| Browser end-to-end tests | 9 Chromium flows; targeted font export also passed in WebKit |
-| Typecheck, ESLint, Vite production build | Passed |
-| Rust clippy with warnings denied and formatting | Passed |
-| npm production dependency audit | 0 reported vulnerabilities |
-| Repository SKILL.md validations | Initial12 passed; new studio-ui-polish skill also passed |
-| macOS debug .app bundle | Passed, approximately31.30MiB after workflow update |
-| Native generation, tracing, export and restart | Passed; see native-acceptance.md |
-| Windows/Linux native runtime and remote CI | Unrun |
+| Executed check                                  | Result                                                                 |
+| ----------------------------------------------- | ---------------------------------------------------------------------- |
+| TypeScript tests                                | 31 passed after studio expansion                                       |
+| Rust tests                                      | 23 passed after studio expansion                                       |
+| Python tests                                    | 11 passed after workflow update                                        |
+| Browser end-to-end tests                        | 11 Chromium flows; previous targeted font export also passed in WebKit |
+| Typecheck, ESLint, Vite production build        | Passed                                                                 |
+| Rust clippy with warnings denied and formatting | Passed                                                                 |
+| npm production dependency audit                 | 0 reported vulnerabilities                                             |
+| Repository SKILL.md validations                 | Initial12 passed; new studio-ui-polish skill also passed               |
+| macOS debug .app bundle                         | Passed, 31.63MiB after studio expansion                                |
+| Native generation, tracing, export and restart  | Passed; see native-acceptance.md                                       |
+| Windows/Linux native runtime and remote CI      | Unrun                                                                  |
 
 Browser tests inspect ZIP contents, PNG dimensions, inheritance/version persistence, both themes, command palette and recovery export/import. They use separate browser storage and are not native storage proof. Native SQLite/process tests and actual desktop UI evidence are recorded separately.
 
@@ -39,7 +39,7 @@ Actual FLUX smoke: 256×256 text generation 20.216 seconds; reference refinement
 
 ## Remaining release gates
 
-This is a functional development build, **not a production-certified cross-platform release**. Signing/notarization, Windows/Linux runtime/device acceptance, clean-machine Python/model/runtime provisioning, optional provider acceptance, full Bézier path editing, font outlining, print/PDF certification, advanced mockup previews and external creative integrations remain open. Native window vibrancy is not enabled; the app uses an opaque native-window fallback with CSS glass surfaces.
+This is a functional development build, **not a production-certified cross-platform release**. Signing/notarization, Windows/Linux runtime/device acceptance, clean-machine Python/model/runtime provisioning, optional provider acceptance, advanced vector boolean operations, font outlining, print/PDF certification, photorealistic mockup rendering and external creative integrations remain open. Native window vibrancy is not enabled; the app uses an opaque native-window fallback with CSS glass surfaces.
 
 Workspace snapshots load assets into memory and retain unreferenced asset files after failures; large-workspace profiling, lazy asset loading and safe garbage collection remain future work. Recovery copies protect completed batches after save failures; forced app termination/power loss during unsaved work has not been certified. The frontend close guard covers window-close handling; platform menu-quit behavior with an unsaved recovery batch still needs native acceptance, and operating-system force quit is outside that guard.
 
@@ -48,3 +48,7 @@ No repository remote was configured, no PR was published, and CI jobs have not r
 ## Workspace workflow continuation
 
 See `workspace-workflow.md` for custom controls, brand lifecycle/pinning, attachments, fonts and live generation diagnostics. Real native two-image512px generation was observed with steps/logs and saved successfully; native Manrope SVG export/dialog follow-up subsequently passed, including embedded-font hash and license checks.
+
+## Studio expansion
+
+See `brand-studio-expansion.md` for editable symbol/text composition, comparison, template mockups, DNA preview, cubic path editing, brand books, motion and prompt clearing. Includes actual local generation and native HTML export evidence; cross-platform release gates remain open.

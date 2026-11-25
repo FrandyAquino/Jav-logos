@@ -37,6 +37,7 @@ it("exports and generates from the latest queued edit rather than the last compl
   });
   expect(exported.svg).toContain(">Edited</text>");
   await act(async () => {
+    result.current.setPrompt("A new petal mark");
     await Promise.all([
       result.current.updateDna({ geometry: "petal" }),
       result.current.generate("procedural", 1),

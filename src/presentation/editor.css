@@ -1,0 +1,317 @@
+.composition-controls h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.editor-history-controls,
+.editor-toolbar-actions,
+.editor-align-actions,
+.editor-node-actions,
+.editor-path-actions,
+.editor-empty-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.composition-layer-list {
+  display: grid;
+  gap: 9px;
+  margin: 14px 0;
+}
+.composition-layer-list label,
+.composition-mono,
+.editor-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.composition-layer-list input,
+.composition-mono input,
+.editor-checkbox input {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+.editor-number-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.editor-number-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+.editor-number-field input {
+  min-width: 0;
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--well);
+  color: var(--text);
+  font-size: 13px;
+  padding: 7px 9px;
+  font-variant-numeric: tabular-nums;
+}
+.editor-number-field input[aria-invalid="true"] {
+  border-color: var(--error-text);
+}
+.editor-number-field small {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--error-text);
+}
+.composition-positions {
+  margin-top: 16px;
+}
+.composition-positions summary {
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 5px 0;
+}
+.quality-ratio {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.design-quality ul {
+  margin: 12px 0 0;
+  padding-left: 17px;
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.design-quality li.warning {
+  color: var(--warning);
+}
+.editor-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  text-align: center;
+  gap: 14px;
+  color: var(--muted);
+}
+.editor-empty > svg {
+  color: var(--accent);
+}
+.editor-empty h2 {
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--text);
+}
+.editor-empty p {
+  max-width: 440px;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 0;
+}
+.editor-empty-actions {
+  justify-content: center;
+  margin: 8px 0;
+}
+.vector-editor {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px 20px;
+  gap: 16px;
+}
+.vector-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.vector-editor-toolbar > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.vector-editor-toolbar strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+.vector-editor-toolbar span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.vector-editor-body {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 220px;
+  align-items: start;
+  gap: 18px;
+  min-height: 0;
+}
+.vector-editor-stage {
+  min-width: 0;
+}
+.vector-editor-stage > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  max-height: 540px;
+  min-height: 260px;
+  background: var(--well);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  touch-action: none;
+  user-select: none;
+}
+.editor-grid-line {
+  stroke: var(--border-soft);
+  stroke-width: 0.6;
+}
+.editor-axis {
+  stroke: var(--subtle);
+  stroke-width: 0.8;
+  stroke-dasharray: 4 6;
+  opacity: 0.5;
+}
+.editor-path {
+  cursor: pointer;
+  stroke: transparent;
+  stroke-width: 1.5;
+}
+.editor-path.selected {
+  stroke: var(--accent);
+}
+.editor-node {
+  fill: var(--panel);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  cursor: grab;
+}
+.editor-node.selected {
+  fill: var(--accent);
+  stroke: var(--accent-text);
+}
+.editor-node-hit {
+  cursor: grab;
+}
+.editor-handle {
+  fill: var(--panel);
+  stroke: var(--text);
+  stroke-width: 1.5;
+  cursor: crosshair;
+}
+.editor-handle-line {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+.editor-node:focus-visible,
+.editor-handle:focus-visible {
+  outline: none;
+  stroke: var(--text);
+  stroke-width: 3;
+}
+.editor-stage-help {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 12px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.editor-stage-help svg {
+  margin-top: 2px;
+}
+.vector-node-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 18px;
+  border-left: 1px solid var(--border-soft);
+  min-width: 0;
+}
+.vector-node-inspector .editor-number-grid {
+  margin: 0;
+}
+.vector-node-inspector .color-field {
+  margin: 0;
+}
+.vector-node-inspector .field-help svg {
+  vertical-align: middle;
+}
+.editor-align-actions .outline-button {
+  flex: 1;
+  padding-inline: 7px;
+  font-size: 11px;
+}
+.editor-node-actions .outline-button {
+  flex: 1;
+  padding-inline: 7px;
+  font-size: 11px;
+}
+.editor-path-actions {
+  padding-top: 13px;
+  border-top: 1px solid var(--border-soft);
+}
+.editor-path-actions > button {
+  flex: 1;
+}
+.editor-error {
+  padding: 10px 12px;
+  margin: 0;
+  background: var(--error-bg);
+  color: var(--error-text);
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+@media (max-width: 1250px) {
+  .vector-editor-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vector-node-inspector {
+    border-left: 0;
+    border-top: 1px solid var(--border-soft);
+    padding: 16px 0 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  .vector-node-inspector > .field-help,
+  .editor-path-actions {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 600px) {
+  .vector-editor {
+    padding: 16px 12px;
+  }
+  .vector-node-inspector {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .vector-node-inspector > * {
+    grid-column: 1;
+  }
+  .editor-toolbar-actions {
+    gap: 5px;
+  }
+  .editor-empty {
+    padding: 24px 16px;
+  }
+}

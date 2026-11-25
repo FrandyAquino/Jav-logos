@@ -1,6 +1,7 @@
 import type { Concept } from "../domain/types";
 import { renderSvg } from "../domain/vector";
 import { rasterUrl, svgUrl } from "./ui";
+import { compositionAsset } from "../infrastructure/composition";
 export function ConceptArtwork({
   concept,
   mode,
@@ -27,7 +28,9 @@ export function ConceptArtwork({
       role={alt ? "img" : undefined}
       aria-label={alt || undefined}
       aria-hidden={!alt || undefined}
-      dangerouslySetInnerHTML={{ __html: renderSvg(concept.document) }}
+      dangerouslySetInnerHTML={{
+        __html: renderSvg(concept.document, compositionAsset(concept)),
+      }}
     />
   );
 }

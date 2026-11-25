@@ -7,6 +7,7 @@ import {
   documentSchema,
   workspaceSchema,
   brandMetadataSchema,
+  bookSchema,
 } from "../domain/schema";
 import { reorderPinned } from "../domain/brand-library";
 import { startGenerationMonitor } from "./generation-monitor";
@@ -23,12 +24,21 @@ import * as desktop from "../infrastructure/desktop";
 import { buildKit, rasterize } from "../infrastructure/export";
 import { sanitizeSvg } from "../infrastructure/svg";
 import { prepareCompositionSvg } from "../infrastructure/font-export";
+import { embedFont } from "../infrastructure/font-export";
+import { compositionAsset } from "../infrastructure/composition";
+import { renderMotionSvg } from "../domain/vector";
+import { createStarterPaths } from "../domain/vector-paths";
+import { importTracePaths } from "../infrastructure/trace-import";
+import { buildBrandBook } from "../infrastructure/brand-book";
 
 interface StudioState {
   workspace: Workspace;
   selectedBrandId: string | null;
   selectedConceptId: string | null;
   prompt: string;
+  submittedPrompt: string | null;
+  generationTarget: "symbol" | "full-logo";
+  historyRevision: number;
   status: string;
   error: string | null;
   busy: boolean;
@@ -56,6 +66,9 @@ const useState = create<StudioState>(() => ({
   selectedBrandId: null,
   selectedConceptId: null,
   prompt: "A distinctive geometric mark with a confident, timeless silhouette",
+  submittedPrompt: null,
+  generationTarget: "symbol",
+  historyRevision: 0,
   status: "Opening workspace…",
   error: null,
   busy: false,
@@ -85,6 +98,20 @@ let writeError: unknown = null;
 let pendingWrites = 0;
 let referenceSequence = 0;
 let activeJob: string | null = null;
+const documentHistory = new Map<
+  string,
+  { undo: VectorDocument[]; redo: VectorDocument[] }
+>();
+function historyFor(id: string) {
+  let history = documentHistory.get(id);
+  if (!history) {
+    if (documentHistory.size >= 10)
+      documentHistory.delete(documentHistory.keys().next().value!);
+    history = { undo: [], redo: [] };
+    documentHistory.set(id, history);
+  }
+  return history;
+}
 let stopGenerationMonitor = () => {};
 function monitorGeneration(jobId: string) {
   stopGenerationMonitor();
@@ -140,6 +167,7 @@ async function initialize() {
 }
 async function persist(
   transform: (workspace: Workspace) => Workspace,
+  onSaved?: () => void,
 ): Promise<boolean> {
   pendingWrites++;
   let successful = false;
@@ -155,6 +183,7 @@ async function persist(
     writeError = null;
     set({ workspace: { ...next, revision }, status: "Saved on this device" });
     successful = true;
+    onSaved?.();
   });
   writeQueue = operation.catch((error) => {
     writeError = error;
@@ -309,8 +338,19 @@ const actions = {
   setPrompt(prompt: string) {
     set({ prompt: prompt.slice(0, 3000) });
   },
+  setGenerationTarget(generationTarget: "symbol" | "full-logo") {
+    set({ generationTarget });
+  },
+  reuseSubmittedPrompt() {
+    const prompt = get().submittedPrompt;
+    if (prompt !== null) set({ prompt });
+  },
   async generate(provider: "procedural" | "local", count: number) {
     if (get().busy || get().referenceLoading) return;
+    if (!Number.isInteger(count) || count < 1 || count > 4) {
+      fail(new Error("Choose one to four concepts."));
+      return;
+    }
     if (get().pendingConcepts.length) {
       fail(
         new Error("Save or export the pending batch before generating again."),
@@ -318,6 +358,9 @@ const actions = {
       return;
     }
     const brandId = get().selectedBrandId;
+    const submittedPrompt = get().prompt;
+    const referenceUrl = get().referenceUrl;
+    const generationTarget = get().generationTarget;
     const jobId = crypto.randomUUID();
     activeJob = jobId;
     set({
@@ -354,23 +397,29 @@ const actions = {
       set({ generationBrandName: brand.name });
       if (brand.status === "archived")
         throw new Error("Restore this archived brand before generating.");
-      if (!state.prompt.trim())
+      if (!submittedPrompt.trim())
         throw new Error("Describe the logo you want to create.");
+      if (get().prompt === submittedPrompt) set({ prompt: "" });
+      set({ submittedPrompt });
       const dna = resolveDna(brand.id, state.workspace.brands);
       const seed = crypto.getRandomValues(new Uint32Array(1))[0] % 2147483647;
       const concepts = generateConcepts(
         brand.id,
         brand.name,
-        state.prompt,
+        submittedPrompt,
         dna,
         count,
         seed,
       );
-      const effectivePrompt = buildPrompt(state.prompt, brand.name, dna);
+      const effectivePrompt =
+        buildPrompt(submittedPrompt, brand.name, dna) +
+        (generationTarget === "symbol"
+          ? " Create only the standalone symbol. No letters, words, lettering, slogans or typography; the studio adds editable text separately."
+          : "");
       for (const concept of concepts) {
         concept.generationContext = {
           effectivePrompt:
-            provider === "local" ? effectivePrompt : state.prompt,
+            provider === "local" ? effectivePrompt : submittedPrompt,
           dna: structuredClone(dna),
           width: provider === "local" ? 512 : 640,
           height: provider === "local" ? 512 : 480,
@@ -385,8 +434,8 @@ const actions = {
           count,
           width: 512,
           height: 512,
-          ...(state.referenceUrl
-            ? { referenceBase64: state.referenceUrl.split(",")[1] }
+          ...(referenceUrl
+            ? { referenceBase64: referenceUrl.split(",")[1] }
             : {}),
         });
         stopGenerationMonitor();
@@ -405,8 +454,10 @@ const actions = {
             seed: image.seed,
             provider: response.provider,
             name: `AI concept ${index + 1}`,
-            ...(state.referenceUrl ? { reference: state.referenceUrl } : {}),
+            ...(referenceUrl ? { reference: referenceUrl } : {}),
           });
+          if (generationTarget === "symbol")
+            concepts[index].document.symbolSource = "image";
         });
       }
       if (activeJob !== jobId) return;
@@ -551,20 +602,100 @@ const actions = {
       await desktop.cancel(jobId);
     });
   },
-  async updateConcept(patch: Partial<VectorDocument>) {
+  async updateConcept(patch: Partial<VectorDocument>, replace = false) {
     const id = get().selectedConceptId;
+    const captured = structuredClone(patch);
     await guarded(async () => {
-      await persist((w) => ({
+      let previous: VectorDocument | undefined;
+      await persist(
+        (w) => ({
+          ...w,
+          concepts: w.concepts.map((c) =>
+            c.id === id
+              ? ((previous = structuredClone(c.document)),
+                {
+                  ...c,
+                  document: documentSchema.parse(
+                    replace ? captured : { ...c.document, ...captured },
+                  ),
+                })
+              : c,
+          ),
+        }),
+        () => {
+          if (id && previous) {
+            const history = historyFor(id);
+            history.undo.push(previous);
+            history.undo = history.undo.slice(-40);
+            history.redo = [];
+            set({ historyRevision: get().historyRevision + 1 });
+          }
+        },
+      );
+    });
+  },
+  async undoConcept() {
+    await changeHistory("undo");
+  },
+  async redoConcept() {
+    await changeHistory("redo");
+  },
+  async updateConceptMetadata(
+    id: string,
+    patch: Partial<Pick<Concept, "name" | "favorite" | "notes">>,
+  ) {
+    await persist((w) => ({
+      ...w,
+      concepts: w.concepts.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+    }));
+  },
+  async updateBrandDna(id: string, patch: Partial<BrandDna>): Promise<boolean> {
+    let saved = false;
+    await guarded(async () => {
+      const validated = dnaSchema.partial().parse(patch);
+      saved = await persist((w) => ({
         ...w,
-        concepts: w.concepts.map((c) =>
-          c.id === id
-            ? {
-                ...c,
-                document: documentSchema.parse({ ...c.document, ...patch }),
-              }
-            : c,
+        brands: w.brands.map((b) =>
+          b.id === id ? { ...b, dna: { ...b.dna, ...validated } } : b,
         ),
       }));
+    });
+    return saved;
+  },
+  async updateBrandBook(patch: NonNullable<Brand["book"]>) {
+    const id = get().selectedBrandId;
+    await guarded(async () => {
+      const validated = bookSchema.parse(patch);
+      await persist((w) => ({
+        ...w,
+        brands: w.brands.map((b) =>
+          b.id === id ? { ...b, book: { ...b.book, ...validated } } : b,
+        ),
+      }));
+    });
+  },
+  async startCustomSymbol() {
+    await guarded(async () => {
+      const concept = selectedConcept();
+      await actions.updateConcept({
+        symbolSource: "custom",
+        paths: createStarterPaths(concept.document.primary),
+        monochrome: false,
+        motion: "none",
+      });
+    });
+  },
+  async editTracedSymbol() {
+    await guarded(async () => {
+      const concept = selectedConcept();
+      if (!concept.tracedSvg)
+        throw new Error("Trace the original image first.");
+      await actions.updateConcept({
+        symbolSource: "custom",
+        paths: importTracePaths(concept.tracedSvg),
+        monochrome: false,
+        motion: "none",
+      });
     });
   },
   async saveVersion() {
@@ -580,7 +711,7 @@ const actions = {
                 {
                   id: crypto.randomUUID(),
                   createdAt: new Date().toISOString(),
-                  document: { ...c.document },
+                  document: structuredClone(c.document),
                 },
               ],
             }
@@ -593,7 +724,7 @@ const actions = {
       const concept = selectedConcept();
       const version = concept.versions.find((v) => v.id === versionId);
       if (!version) throw new Error("Version not found.");
-      await actions.updateConcept(version.document);
+      await actions.updateConcept(version.document, true);
     });
   },
   async vectorizeConcept() {
@@ -625,7 +756,10 @@ const actions = {
         throw new Error("Trace this image first.");
       const svg = useTrace
         ? sanitizeSvg(concept.tracedSvg!)
-        : await prepareCompositionSvg(concept.document);
+        : await prepareCompositionSvg(
+            concept.document,
+            compositionAsset(concept),
+          );
       const saved = await desktop.exportFile(
         fileName(useTrace ? "-trace.svg" : "-composition.svg", concept.brandId),
         new TextEncoder().encode(svg),
@@ -657,7 +791,10 @@ const actions = {
           : await rasterize(
               mode === "trace"
                 ? sanitizeSvg(concept.tracedSvg!)
-                : await prepareCompositionSvg(concept.document),
+                : await prepareCompositionSvg(
+                    concept.document,
+                    compositionAsset(concept),
+                  ),
             );
       const saved = await desktop.exportFile(
         fileName(`-${mode}.png`, concept.brandId),
@@ -678,6 +815,41 @@ const actions = {
         bytes,
       );
       set({ status: saved ? "Brand kit exported" : "Export cancelled" });
+    });
+  },
+  async exportMotion() {
+    const id = get().selectedConceptId;
+    await guarded(async () => {
+      await flushWrites();
+      const concept = selectedConcept(id);
+      const svg = await embedFont(
+        renderMotionSvg(concept.document, compositionAsset(concept)),
+        concept.document.fontFamily,
+      );
+      const saved = await desktop.exportFile(
+        fileName("-animated.svg", concept.brandId),
+        new TextEncoder().encode(svg),
+      );
+      set({ status: saved ? "Animated SVG exported" : "Export cancelled" });
+    });
+  },
+  async exportBrandBook(mode: "composition" | "original" = "composition") {
+    const id = get().selectedBrandId;
+    const conceptId = get().selectedConceptId;
+    await guarded(async () => {
+      await flushWrites();
+      if (!id) throw new Error("Select a brand first.");
+      const html = await buildBrandBook(
+        get().workspace,
+        id,
+        conceptId ?? undefined,
+        mode,
+      );
+      const saved = await desktop.exportFile(
+        fileName("-brand-book.html", id),
+        new TextEncoder().encode(html),
+      );
+      set({ status: saved ? "Brand book exported" : "Export cancelled" });
     });
   },
   async importReference(file: File) {
@@ -826,5 +998,35 @@ export function useStudio() {
     selectedBrand,
     selectedConcept: concept,
     resolvedDna,
+    canUndo: Boolean(concept && documentHistory.get(concept.id)?.undo.length),
+    canRedo: Boolean(concept && documentHistory.get(concept.id)?.redo.length),
   };
+}
+async function changeHistory(direction: "undo" | "redo") {
+  const id = get().selectedConceptId;
+  if (!id) return;
+  await guarded(async () => {
+    let current: VectorDocument | undefined;
+    const history = historyFor(id);
+    await persist(
+      (w) => {
+        const target = history[direction].at(-1);
+        if (!target) return w;
+        return {
+          ...w,
+          concepts: w.concepts.map((c) => {
+            if (c.id !== id) return c;
+            current = structuredClone(c.document);
+            return { ...c, document: structuredClone(target) };
+          }),
+        };
+      },
+      () => {
+        if (!current) return;
+        history[direction].pop();
+        history[direction === "undo" ? "redo" : "undo"].push(current);
+        set({ historyRevision: get().historyRevision + 1 });
+      },
+    );
+  });
 }

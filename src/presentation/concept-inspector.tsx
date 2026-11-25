@@ -15,6 +15,7 @@ import { Field, shapes, type StudioState } from "./ui";
 import { ColorField, TextField, RangeField } from "./property-fields";
 import { FontPicker } from "./font-picker";
 import { SelectField } from "./select-field";
+import { CompositionControls } from "./composition-controls";
 export function ConceptInspector({ studio }: { studio: StudioState }) {
   const concept = studio.selectedConcept;
   const [versionsOpen, setVersionsOpen] = useState(false);
@@ -41,8 +42,8 @@ export function ConceptInspector({ studio }: { studio: StudioState }) {
         </div>
         {concept.raster && (
           <p className="field-help">
-            These controls edit the geometric composition. The generated image
-            and traced paths remain separate.
+            Edit the composition below. Original artwork remains available for
+            comparison.
           </p>
         )}
         <Field label="Symbol">
@@ -50,7 +51,10 @@ export function ConceptInspector({ studio }: { studio: StudioState }) {
             label="Logo symbol"
             value={document.shape}
             onValueChange={(shape) =>
-              studio.updateConcept({ shape: shape as ShapeKind })
+              studio.updateConcept({
+                shape: shape as ShapeKind,
+                symbolSource: "geometric",
+              })
             }
             options={shapes.map((shape) => ({
               value: shape,
@@ -84,6 +88,7 @@ export function ConceptInspector({ studio }: { studio: StudioState }) {
           onChange={(background) => studio.updateConcept({ background })}
         />
       </div>
+      <CompositionControls studio={studio} />
       <div className="inspector-section">
         <h3>Transform</h3>
         <Field

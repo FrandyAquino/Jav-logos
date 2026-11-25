@@ -15,6 +15,16 @@ import { GenerationBar } from "./generation-bar";
 import { IconButton, Mark, type StudioState } from "./ui";
 import { ConceptArtwork } from "./concept-artwork";
 import {
+  CompareView,
+  MockupView,
+  DnaMapView,
+  MotionView,
+} from "./studio-views";
+import { VectorEditor } from "./vector-editor";
+import { BrandBookView } from "./brand-book-view";
+import "./brand-book.css";
+import "./studio-navigation.css";
+import {
   GenerationProgressPanel,
   generationIsActive,
   generationPhaseLabels,
@@ -28,6 +38,9 @@ export function CreativeCanvas({
   onCreate: () => void;
 }) {
   const [gallery, setGallery] = useState(false);
+  const [surface, setSurface] = useState<
+    "canvas" | "compare" | "mockups" | "dna" | "edit" | "book" | "motion"
+  >("canvas");
   const [viewActivity, setViewActivity] = useState(true);
   const [view, setView] = useState<"vector" | "image" | "trace">("image");
   const [previewBackground, setPreviewBackground] = useState<
@@ -85,6 +98,7 @@ export function CreativeCanvas({
             disabled={!concepts.length}
             onClick={() => {
               setGallery(false);
+              setSurface("canvas");
               setViewActivity(false);
             }}
           >
@@ -96,6 +110,7 @@ export function CreativeCanvas({
             disabled={!concepts.length}
             onClick={() => {
               setGallery(true);
+              setSurface("canvas");
               setViewActivity(false);
             }}
           >
@@ -112,6 +127,33 @@ export function CreativeCanvas({
           )}
         </div>
       </div>
+      {studio.selectedBrand && (
+        <div className="studio-tools" role="group" aria-label="Studio tools">
+          {(
+            [
+              ["compare", "Compare"],
+              ["mockups", "Mockups"],
+              ["dna", "DNA map"],
+              ["edit", "Vector editor"],
+              ["book", "Brand book"],
+              ["motion", "Motion"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              type="button"
+              key={id}
+              aria-pressed={surface === id && !showActivity}
+              disabled={!["dna", "book"].includes(id) && !selected}
+              onClick={() => {
+                setSurface(id);
+                setViewActivity(false);
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       {!showActivity && studio.generationProgress && (
         <details className="last-generation">
           <summary>
@@ -127,6 +169,18 @@ export function CreativeCanvas({
       )}
       {showActivity ? (
         <GenerationProgressPanel studio={studio} />
+      ) : surface === "compare" ? (
+        <CompareView studio={studio} />
+      ) : surface === "mockups" ? (
+        <MockupView studio={studio} />
+      ) : surface === "dna" ? (
+        <DnaMapView studio={studio} />
+      ) : surface === "edit" ? (
+        <VectorEditor studio={studio} />
+      ) : surface === "book" ? (
+        <BrandBookView key={studio.selectedBrand?.id} studio={studio} />
+      ) : surface === "motion" ? (
+        <MotionView studio={studio} />
       ) : !studio.selectedBrand ? (
         <div className="welcome-canvas">
           <div className="welcome-emblem">

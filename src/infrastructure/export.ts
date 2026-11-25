@@ -3,6 +3,7 @@ import { resolveDna } from "../domain/brand-dna";
 import { prepareCompositionSvg, fontLicense } from "./font-export";
 import type { Workspace } from "../domain/types";
 import { sanitizeSvg } from "./svg";
+import { compositionAsset } from "./composition";
 export async function rasterize(svg: string): Promise<Uint8Array> {
   const image = new Image();
   const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
@@ -68,7 +69,10 @@ export async function buildKit(
       );
     if (concept.tracedSvg)
       files[`${prefix}-trace.svg`] = strToU8(sanitizeSvg(concept.tracedSvg));
-    const svg = await prepareCompositionSvg(concept.document);
+    const svg = await prepareCompositionSvg(
+      concept.document,
+      compositionAsset(concept),
+    );
     files[`${prefix}-composition.svg`] = strToU8(svg);
     files[`${prefix}-composition.png`] = await rasterize(svg);
   }

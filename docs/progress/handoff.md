@@ -30,3 +30,5 @@ Provision and verify isolated Python plus model/runtime paths on a clean machine
 Do not relabel this development candidate as production-ready merely because the local checks pass. Do not rerun the entire independent review just to reapply findings; use its receipt and the recorded focused regression evidence.
 
 Workflow continuation: read `workspace-workflow.md` and `docs/planning/workspace-workflow.md`. `Workflow QA` holds two real512px outputs from progress acceptance. The window subsequently became accessible. Native Manrope SVG export through the Save dialog passed, with font hashes/license checked; see workspace-workflow.md and artifacts/native-font-export-receipt.json. Brand metadata is additive/optional; old workspace records still load.
+
+Studio expansion continuation: read `brand-studio-expansion.md`. All seven approved additions are implemented, prompt clearing includes new-draft protection, version restore replaces documents, and history transitions are serialized. Native `Studio Expansion QA` holds a real generated symbol with Manrope composition and book copy. Keep customer brands untouched.

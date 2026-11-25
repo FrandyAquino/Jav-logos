@@ -154,6 +154,30 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
                 label: `${number} ${number === 1 ? "concept" : "concepts"}`,
               }))}
             />
+            {provider === "local" && (
+              <SelectField
+                label="Generation target"
+                value={studio.generationTarget}
+                onValueChange={(value) =>
+                  studio.setGenerationTarget(value as "symbol" | "full-logo")
+                }
+                disabled={studio.busy}
+                options={[
+                  {
+                    value: "symbol",
+                    label: "Symbol + editable text",
+                    description:
+                      "Generate the mark; compose real typography in the studio",
+                  },
+                  {
+                    value: "full-logo",
+                    label: "Full image concept",
+                    description:
+                      "Generate the entire image, including requested lettering",
+                  },
+                ]}
+              />
+            )}
           </div>
           {studio.busy && !studio.cancellable ? (
             <span className="working-label">
@@ -179,6 +203,20 @@ export function GenerationBar({ studio }: { studio: StudioState }) {
           )}
         </div>
       </form>
+      {studio.submittedPrompt && (
+        <details className="submitted-prompt">
+          <summary>Last sent prompt</summary>
+          <p>{studio.submittedPrompt}</p>
+          <button
+            type="button"
+            className="subtle-button"
+            disabled={studio.busy}
+            onClick={studio.reuseSubmittedPrompt}
+          >
+            Use prompt again
+          </button>
+        </details>
+      )}
       <div className="composer-caption">
         {archived ? (
           "This workspace is archived. Restore it from the library to generate."

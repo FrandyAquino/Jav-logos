@@ -5,4 +5,6 @@
 3. Integration: hierarchy inheritance and overrides, generation status/cancellation, vector editing, references, versions, consistency and brand kit. Gate: create→generate→edit→save→reload→export with failures visible and no fabricated AI results.
 4. Hardening: security review, runtime inspection, packaging, supported OS CI configuration, accessibility. Gate: native macOS build and launch plus executed tests; Windows/Linux release acceptance requires real target runs.
 
-Release backlog: signed/notarized installers on all targets, reproducible AI runtime distribution, full path-node editing and font outlining, certified print/PDF exports, advanced reference refinement, verified optional integrations, realistic load/performance/recovery trials. Production readiness is gated by evidence, not by the existence of CI files.
+Release backlog: signed/notarized installers on all targets, reproducible AI runtime distribution, advanced vector boolean operations and font outlining, certified print/PDF exports, advanced reference refinement, verified optional integrations, realistic load/performance/recovery trials. Production readiness is gated by evidence, not by the existence of CI files.
+
+Approved studio expansion implemented: see `brand-studio-expansion.md` for the contract and `../progress/brand-studio-expansion.md` for executed evidence and limitations.

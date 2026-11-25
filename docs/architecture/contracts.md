@@ -5,6 +5,7 @@ Dependency flow: presentation → application → domain; infrastructure impleme
 Frontend source of shared types: `src/domain/types.ts`. A Workspace has `schemaVersion:1`, `revision:number`, `brands:Brand[]`, `concepts:Concept[]`. Native load returns `{snapshot: Workspace|null, revision:number}`. Native save accepts `{snapshot, expectedRevision}` and returns the new revision, rejecting stale writes atomically. Persist full workspace JSON in SQLite with versioned schema; assets use app-data files. Do not silently seed over corrupt data. New concepts can include immutable `generationContext` and an original PNG `reference`; legacy concepts omit them. String limits are UTF-16 units, matching JavaScript; identifiers allow 1–128 ASCII letters, digits, hyphens and underscores.
 
 ## IPC (camelCase arguments; snake_case commands)
+
 - `load_workspace()` → `{snapshot:object|null,revision:number}`.
 - `save_workspace({snapshot:object,expectedRevision:number})` → number.
 - `provider_health()` → `{available:boolean,provider:string,message:string}`.
@@ -23,3 +24,11 @@ Application API for presentation: `useStudio()` returns workspace, selectedBrand
 ## Library and typography additions
 
 Brands accept optional status/pinned/order/icon fields; absent values preserve legacy active/unpinned behavior. Archive is reversible and does not delete descendants. Font names are shared by TypeScript/Rust via `shared/font-families.json`; approved font assets/licenses are indexed in `shared/font-assets.json`. Only typed primitive compositions render inline; untrusted traces remain sanitized image sources. Trusted composition exports embed approved font data and licenses.
+
+## Composition expansion
+
+`VectorDocument` optionally carries layout, separate slogan and layer controls, symbol source, cubic paths and motion. `Concept` adds favorites/notes; `Brand` adds book copy. Optional values preserve older records. `src/domain/schema.ts` and `src-tauri/src/vector-model.rs` validate bounds, global path/node IDs and paired handles; image/trace documents and saved versions require concept assets. Maximum100 paths,200 contours,3000 nodes, coordinates±1000. Image/trace symbols cannot use vector monochrome/draw until converted to typed paths.
+
+Infrastructure selects composition assets and embeds approved fonts; imported markup stays in image data URLs. Trace import normalizes supported paths with `svgpath` into typed cubic contours. `updateConcept` supports patches and full document replacement for version restore; persisted edits and history transitions share the serialized write queue. Undo/redo is bounded session state, while explicit versions persist.
+
+Brand-book HTML exports contain escaped copy and self-contained image/font assets without scripts. Native export permits svg/png/zip/json/html only. Motion SVG comes from the trusted primitive renderer; no user-authored animation code is evaluated. See `../planning/brand-studio-expansion.md` for the complete feature contract.

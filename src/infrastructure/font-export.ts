@@ -36,9 +36,12 @@ export async function fontLicense(family: string): Promise<string | null> {
 }
 export async function prepareCompositionSvg(
   document: VectorDocument,
+  symbolDataUrl?: string,
 ): Promise<string> {
-  const svg = renderSvg(document);
-  const font = bundledFont(document.fontFamily);
+  return embedFont(renderSvg(document, symbolDataUrl), document.fontFamily);
+}
+export async function embedFont(svg: string, family: string): Promise<string> {
+  const font = bundledFont(family);
   if (!font) return svg;
   const declarations = await Promise.all(
     font.faces.map(
@@ -48,7 +51,8 @@ export async function prepareCompositionSvg(
   );
   const license = await fontLicense(font.family);
   return svg.replace(
-    "><rect",
-    `><metadata>${xml(`${font.family}\n${license}`)}</metadata><defs><style>${declarations.join("\n")}</style></defs><rect`,
+    /<svg\b[^>]*>/,
+    (root) =>
+      `${root}<metadata>${xml(`${font.family}\n${license}`)}</metadata><defs><style>${declarations.join("\n")}</style></defs>`,
   );
 }

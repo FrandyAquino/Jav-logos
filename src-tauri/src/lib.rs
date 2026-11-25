@@ -3,6 +3,8 @@ mod error;
 mod generation_progress;
 mod model;
 mod storage;
+#[path = "vector-model.rs"]
+mod vector_model;
 mod worker;
 
 use error::{AppError, AppResult};
@@ -98,7 +100,7 @@ async fn export_file(
         .and_then(|v| v.to_str())
         .unwrap_or("")
         .to_lowercase();
-    if !["svg", "png", "zip", "json"].contains(&extension.as_str()) {
+    if !["svg", "png", "zip", "json", "html"].contains(&extension.as_str()) {
         return Err(AppError::invalid("Unsupported export format"));
     }
     let (sender, receiver) = tokio::sync::oneshot::channel();

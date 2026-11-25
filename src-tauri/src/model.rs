@@ -14,6 +14,8 @@ pub struct Workspace {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Brand {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub book: Option<BrandBook>,
     pub id: String,
     pub name: String,
     pub parent_id: Option<String>,
@@ -53,19 +55,7 @@ pub enum Shape {
     Grid,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct VectorDocument {
-    pub shape: Shape,
-    pub text: String,
-    pub primary: String,
-    pub background: String,
-    pub font_family: String,
-    pub scale: f64,
-    pub rotation: f64,
-    pub letter_spacing: f64,
-    pub stroke_width: f64,
-}
+pub use crate::vector_model::VectorDocument;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -78,6 +68,10 @@ pub struct ConceptVersion {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Concept {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub favorite: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes: Option<String>,
     pub id: String,
     pub brand_id: String,
     pub name: String,
@@ -106,7 +100,7 @@ pub struct GenerationContext {
     pub height: u32,
 }
 
-fn bounded(value: &str, max: usize, label: &str) -> AppResult<()> {
+pub(crate) fn bounded(value: &str, max: usize, label: &str) -> AppResult<()> {
     if value.encode_utf16().count() > max || value.contains('\0') {
         return Err(AppError::invalid(format!(
             "{label} exceeds allowed length or contains NUL"
@@ -127,37 +121,13 @@ pub fn identifier(value: &str) -> AppResult<()> {
     Ok(())
 }
 
-fn color(value: &str) -> bool {
+pub(crate) fn color(value: &str) -> bool {
     value.len() == 7
         && value.starts_with('#')
         && value.as_bytes()[1..].iter().all(u8::is_ascii_hexdigit)
 }
 
-impl VectorDocument {
-    fn validate(&self) -> AppResult<()> {
-        bounded(&self.text, 120, "Logo text")?;
-        validate_font(&self.font_family)?;
-        if !color(&self.primary) || !color(&self.background) {
-            return Err(AppError::invalid("Colors must be six-digit hex values"));
-        }
-        if !self.scale.is_finite()
-            || !(0.3..=2.0).contains(&self.scale)
-            || !self.rotation.is_finite()
-            || !(-180.0..=180.0).contains(&self.rotation)
-            || !self.letter_spacing.is_finite()
-            || !(-5.0..=30.0).contains(&self.letter_spacing)
-            || !self.stroke_width.is_finite()
-            || !(0.0..=12.0).contains(&self.stroke_width)
-        {
-            return Err(AppError::invalid(
-                "Vector settings are outside allowed bounds",
-            ));
-        }
-        Ok(())
-    }
-}
-
-fn validate_font(font: &str) -> AppResult<()> {
+pub(crate) fn validate_font(font: &str) -> AppResult<()> {
     static FONTS: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
     let fonts = FONTS.get_or_init(|| {
         serde_json::from_str(include_str!("../../shared/font-families.json"))
@@ -209,6 +179,9 @@ impl Workspace {
             }
             bounded(&brand.created_at, 64, "Creation date")?;
             brand.dna.validate()?;
+            if let Some(book) = &brand.book {
+                book.validate()?;
+            }
             if brand
                 .status
                 .as_deref()
@@ -266,6 +239,12 @@ impl Workspace {
             }
             bounded(&concept.created_at, 64, "Creation date")?;
             concept.document.validate()?;
+            concept
+                .document
+                .validate_assets(concept.raster.is_some(), concept.traced_svg.is_some())?;
+            if let Some(notes) = &concept.notes {
+                bounded(notes, 3000, "Concept notes")?;
+            }
             if concept.versions.len() > 100 {
                 return Err(AppError::invalid("Too many concept versions"));
             }
@@ -277,6 +256,9 @@ impl Workspace {
                 }
                 bounded(&version.created_at, 64, "Version date")?;
                 version.document.validate()?;
+                version
+                    .document
+                    .validate_assets(concept.raster.is_some(), concept.traced_svg.is_some())?;
             }
             for raster in [&concept.raster, &concept.reference].into_iter().flatten() {
                 bounded(raster, 16_000_000, "Raster")?;
@@ -306,5 +288,33 @@ mod tests {
         assert!(bounded(&"品".repeat(4001), 4000, "Prompt").is_err());
         assert!(bounded(&"🚀".repeat(60), 120, "Brand").is_ok());
         assert!(bounded(&"🚀".repeat(61), 120, "Brand").is_err());
+    }
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct BrandBook {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub headline: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub overview: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub usage_notes: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub voice: Option<String>,
+}
+impl BrandBook {
+    fn validate(&self) -> AppResult<()> {
+        for (value, max, label) in [
+            (&self.headline, 200, "Book headline"),
+            (&self.overview, 3000, "Book overview"),
+            (&self.usage_notes, 3000, "Book usage notes"),
+            (&self.voice, 1500, "Book voice"),
+        ] {
+            if let Some(value) = value {
+                bounded(value, max, label)?;
+            }
+        }
+        Ok(())
     }
 }

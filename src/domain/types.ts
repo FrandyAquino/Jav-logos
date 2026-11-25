@@ -12,7 +12,12 @@ export interface Brand {
   parentId: string | null;
   dna: Partial<BrandDna>;
   createdAt: string;
-  book?: { headline?:string; overview?:string; usageNotes?:string; voice?:string };
+  book?: {
+    headline?: string;
+    overview?: string;
+    usageNotes?: string;
+    voice?: string;
+  };
   status?: "active" | "completed" | "archived";
   pinned?: boolean;
   order?: number;
@@ -27,9 +32,25 @@ export interface Brand {
     | "layers"
     | "spark";
 }
-export interface VectorNode {id:string;x:number;y:number;inX?:number;inY?:number;outX?:number;outY?:number;}
-export interface VectorContour {nodes:VectorNode[];closed:boolean;}
-export interface VectorPath {id:string;fill:string;fillRule?:'nonzero'|'evenodd';contours:VectorContour[];}
+export interface VectorNode {
+  id: string;
+  x: number;
+  y: number;
+  inX?: number;
+  inY?: number;
+  outX?: number;
+  outY?: number;
+}
+export interface VectorContour {
+  nodes: VectorNode[];
+  closed: boolean;
+}
+export interface VectorPath {
+  id: string;
+  fill: string;
+  fillRule?: "nonzero" | "evenodd";
+  contours: VectorContour[];
+}
 export interface VectorDocument {
   shape: ShapeKind;
   text: string;
@@ -40,23 +61,23 @@ export interface VectorDocument {
   rotation: number;
   letterSpacing: number;
   strokeWidth: number;
-  layout?: 'stacked'|'horizontal'|'symbol'|'wordmark';
-  slogan?:string;
-  symbolSource?:'geometric'|'image'|'trace'|'custom';
-  showSymbol?:boolean;
-  showWordmark?:boolean;
-  showSlogan?:boolean;
-  monochrome?:boolean;
-  wordmarkSize?:number;
-  sloganSize?:number;
-  symbolOffsetX?:number;
-  symbolOffsetY?:number;
-  wordmarkOffsetX?:number;
-  wordmarkOffsetY?:number;
-  sloganOffsetX?:number;
-  sloganOffsetY?:number;
-  paths?:VectorPath[];
-  motion?:'none'|'fade'|'assemble'|'draw';
+  layout?: "stacked" | "horizontal" | "symbol" | "wordmark";
+  slogan?: string;
+  symbolSource?: "geometric" | "image" | "trace" | "custom";
+  showSymbol?: boolean;
+  showWordmark?: boolean;
+  showSlogan?: boolean;
+  monochrome?: boolean;
+  wordmarkSize?: number;
+  sloganSize?: number;
+  symbolOffsetX?: number;
+  symbolOffsetY?: number;
+  wordmarkOffsetX?: number;
+  wordmarkOffsetY?: number;
+  sloganOffsetX?: number;
+  sloganOffsetY?: number;
+  paths?: VectorPath[];
+  motion?: "none" | "fade" | "assemble" | "draw";
 }
 export interface ConceptVersion {
   id: string;
@@ -82,8 +103,8 @@ export interface Concept {
     height: number;
   };
   versions: ConceptVersion[];
-  favorite?:boolean;
-  notes?:string;
+  favorite?: boolean;
+  notes?: string;
 }
 export interface Workspace {
   schemaVersion: 1;

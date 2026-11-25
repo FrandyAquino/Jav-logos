@@ -333,6 +333,7 @@ mod tests {
         let store = Store::open(dir.path()).unwrap();
         let mut invalid = empty();
         invalid.brands.push(crate::model::Brand {
+            book: None,
             id: "brand-a".into(),
             name: "Brand".into(),
             parent_id: Some("brand-a".into()),
