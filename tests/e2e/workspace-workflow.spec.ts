@@ -177,3 +177,109 @@ test("reference attachments expose preview and removal without native textarea c
       .evaluate((el) => getComputedStyle(el).resize),
   ).toBe("none");
 });
+
+test("concept deletion is confirmed, retryable, keyboard accessible and persists through reload", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await create(page, "Deletion QA", true);
+  await expect(page.getByText("Shared Brand DNA", { exact: true })).toHaveCount(
+    0,
+  );
+  await chooseOption(page, "Brand typography", "Google Sans Flex");
+  await expect(page.locator(".type-specimen-sample")).toContainText(
+    "0123456789",
+  );
+  await page.getByRole("button", { name: "Generate", exact: true }).click();
+  const concepts = page.getByRole("button", { name: /^Select .* study$/ });
+  await expect(concepts).toHaveCount(4);
+  const original = await page.evaluate(
+    () => JSON.parse(localStorage.getItem("javlogos.workspace.v1")!).snapshot,
+  );
+  const deleting = page.getByRole("button", {
+    name: "Delete Orbit study",
+    exact: true,
+  });
+  await deleting.click();
+  const dialog = page.getByRole("dialog", { name: "Delete concept?" });
+  await expect(
+    dialog.getByRole("button", { name: "Cancel", exact: true }),
+  ).toBeFocused();
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(deleting).toBeFocused();
+  await deleting.click();
+  await page.keyboard.press("Escape");
+  await expect(deleting).toBeFocused();
+  expect(
+    await page.evaluate(
+      () => JSON.parse(localStorage.getItem("javlogos.workspace.v1")!).snapshot,
+    ),
+  ).toEqual(original);
+  await page.evaluate(() => {
+    const original = Storage.prototype.setItem;
+    Object.assign(window, {
+      restoreQaStorage: () => {
+        Storage.prototype.setItem = original;
+      },
+    });
+    Storage.prototype.setItem = function (key, value) {
+      if (
+        key === "javlogos.workspace.v1" &&
+        JSON.parse(value).snapshot.concepts.length < 4
+      )
+        throw new Error("Disk full");
+      return original.call(this, key, value);
+    };
+  });
+  await deleting.click();
+  await dialog
+    .getByRole("button", { name: "Delete concept", exact: true })
+    .click();
+  await expect(dialog.getByRole("alert")).toContainText("still saved");
+  await expect(page.locator("[data-concept-select]")).toHaveCount(4);
+  await page.evaluate(() =>
+    (window as unknown as { restoreQaStorage: () => void }).restoreQaStorage(),
+  );
+  await dialog
+    .getByRole("button", { name: "Delete concept", exact: true })
+    .click();
+  await expect(dialog).toHaveCount(0);
+  await expect(concepts).toHaveCount(3);
+  await expect(
+    page.getByRole("button", { name: "Select Petal study", exact: true }),
+  ).toBeFocused();
+  await page.reload();
+  await expect(concepts).toHaveCount(3);
+  await expect(
+    page.getByRole("button", { name: "Select Orbit study", exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Gallery view" }).click();
+  await page
+    .getByRole("button", { name: "Delete Prism study", exact: true })
+    .click();
+  await dialog
+    .getByRole("button", { name: "Delete concept", exact: true })
+    .click();
+  await expect(concepts).toHaveCount(2);
+  await page.screenshot({ path: "artifacts/concept-deletion-gallery.png" });
+  for (const name of ["Petal study", "Monogram study"]) {
+    await page
+      .getByRole("button", { name: `Delete ${name}`, exact: true })
+      .click();
+    await dialog
+      .getByRole("button", { name: "Delete concept", exact: true })
+      .click();
+    await expect(dialog).toHaveCount(0);
+  }
+  await expect(
+    page.getByRole("heading", { name: "Explore your first concepts" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("main", { name: "Creative workspace" }),
+  ).toBeFocused();
+  await page.reload();
+  await expect(concepts).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Open Deletion QA", exact: true }),
+  ).toBeVisible();
+});

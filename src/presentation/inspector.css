@@ -197,29 +197,31 @@
   letter-spacing: 0;
 }
 .type-specimen {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 14px;
+  gap: 8px 12px;
   color: var(--text);
-  margin-top: 16px;
+  margin-top: 14px;
 }
-.type-specimen > span {
-  font-size: 42px;
+.type-specimen-mark {
+  font-size: 32px;
   letter-spacing: -0.03em;
-  line-height: 1.1;
+  line-height: 1;
 }
-.type-specimen p {
-  font-size: 12px;
-  line-height: 1.5;
+.type-specimen-name {
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.type-specimen-sample {
+  grid-column: 1 / -1;
   margin: 0;
-  min-width: 0;
-}
-.type-specimen small {
-  display: block;
-  font-size: 11px;
-  color: var(--subtle);
-  margin-top: 5px;
-  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted);
 }
 .inspector-empty {
   padding: 38px 22px;

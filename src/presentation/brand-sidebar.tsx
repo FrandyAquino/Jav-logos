@@ -392,14 +392,6 @@ export function BrandSidebar({
         </button>
       )}
       <div className="sidebar-bottom">
-        <div className="dna-note">
-          <Layers3 size={18} />
-          <strong>Shared Brand DNA</strong>
-          <p>
-            Related identities share a visual foundation. Each can keep its own
-            character.
-          </p>
-        </div>
         <div className="local-note">
           <RotateCcw size={13} />
           <span>Archived work can be restored</span>

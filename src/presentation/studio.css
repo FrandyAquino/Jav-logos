@@ -418,26 +418,6 @@ kbd {
   margin-top: auto;
   padding-top: 32px;
 }
-.dna-note {
-  padding: 16px 8px;
-  border-top: 1px solid var(--border-soft);
-  color: var(--subtle);
-}
-.dna-note svg {
-  color: var(--muted);
-  display: block;
-  margin-bottom: 10px;
-}
-.dna-note strong {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--muted);
-}
-.dna-note p {
-  font-size: 12px;
-  line-height: 1.6;
-  margin: 6px 0 0;
-}
 .local-note {
   border-top: 1px solid var(--border-soft);
   display: flex;

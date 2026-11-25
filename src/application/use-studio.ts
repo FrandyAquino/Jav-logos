@@ -98,6 +98,7 @@ let writeError: unknown = null;
 let pendingWrites = 0;
 let referenceSequence = 0;
 let activeJob: string | null = null;
+const deletingConcepts = new Set<string>();
 const documentHistory = new Map<
   string,
   { undo: VectorDocument[]; redo: VectorDocument[] }
@@ -648,6 +649,43 @@ const actions = {
       ...w,
       concepts: w.concepts.map((c) => (c.id === id ? { ...c, ...patch } : c)),
     }));
+  },
+  async deleteConcept(id: string): Promise<boolean> {
+    if (get().busy || deletingConcepts.has(id)) return false;
+    deletingConcepts.add(id);
+    let saved = false;
+    await guarded(async () => {
+      const concept = selectedConcept(id);
+      let replacement: string | null = null;
+      saved = await persist(
+        (workspace) => {
+          const siblings = workspace.concepts.filter(
+            (item) => item.brandId === concept.brandId,
+          );
+          const index = siblings.findIndex((item) => item.id === id);
+          if (index < 0)
+            throw new Error("This concept is no longer available.");
+          replacement =
+            siblings[index + 1]?.id ?? siblings[index - 1]?.id ?? null;
+          return {
+            ...workspace,
+            concepts: workspace.concepts.filter((item) => item.id !== id),
+          };
+        },
+        () => {
+          documentHistory.delete(id);
+          set({
+            ...(get().selectedConceptId === id
+              ? { selectedConceptId: replacement }
+              : {}),
+            historyRevision: get().historyRevision + 1,
+            status: "Concept deleted",
+          });
+        },
+      );
+    });
+    deletingConcepts.delete(id);
+    return saved;
   },
   async updateBrandDna(id: string, patch: Partial<BrandDna>): Promise<boolean> {
     let saved = false;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Grid2X2,
   Image,
@@ -11,6 +11,9 @@ import {
   Archive,
   CheckCircle2,
 } from "lucide-react";
+import type { Concept } from "../domain/types";
+import { ConceptCard } from "./concept-card";
+import { DeleteConceptDialog } from "./delete-concept-dialog";
 import { GenerationBar } from "./generation-bar";
 import { IconButton, Mark, type StudioState } from "./ui";
 import { ConceptArtwork } from "./concept-artwork";
@@ -37,6 +40,29 @@ export function CreativeCanvas({
   studio: StudioState;
   onCreate: () => void;
 }) {
+  const workspaceRef = useRef<HTMLElement>(null);
+  const deleteTrigger = useRef<HTMLButtonElement | null>(null);
+  const [deleting, setDeleting] = useState<Pick<
+    Concept,
+    "id" | "name" | "brandId"
+  > | null>(null);
+  const requestDelete = (concept: Concept, trigger: HTMLButtonElement) => {
+    deleteTrigger.current = trigger;
+    setDeleting({
+      id: concept.id,
+      name: concept.name,
+      brandId: concept.brandId,
+    });
+  };
+  const restoreDeleteFocus = () => {
+    if (deleteTrigger.current?.isConnected) deleteTrigger.current.focus();
+    else {
+      const selection = workspaceRef.current?.querySelector<HTMLButtonElement>(
+        '[data-concept-select][aria-pressed="true"]',
+      );
+      (selection ?? workspaceRef.current)?.focus();
+    }
+  };
   const [gallery, setGallery] = useState(false);
   const [surface, setSurface] = useState<
     "canvas" | "compare" | "mockups" | "dna" | "edit" | "book" | "motion"
@@ -65,7 +91,12 @@ export function CreativeCanvas({
     (brand) => brand.id === studio.selectedBrand?.parentId,
   );
   return (
-    <main className="creative-workspace" aria-label="Creative workspace">
+    <main
+      ref={workspaceRef}
+      tabIndex={-1}
+      className="creative-workspace"
+      aria-label="Creative workspace"
+    >
       <div className="workspace-heading">
         <div className="breadcrumb">
           {parent && (
@@ -211,28 +242,18 @@ export function CreativeCanvas({
       ) : gallery ? (
         <div className="concept-gallery">
           {concepts.map((concept) => (
-            <button
-              type="button"
-              className={`gallery-card ${concept.id === selected?.id ? "selected" : ""}`}
+            <ConceptCard
               key={concept.id}
-              aria-pressed={concept.id === selected?.id}
-              onClick={() => {
+              concept={concept}
+              selected={concept.id === selected?.id}
+              layout="gallery"
+              disabled={studio.busy}
+              onSelect={() => {
                 studio.selectConcept(concept.id);
                 setGallery(false);
               }}
-            >
-              <div className="gallery-art">
-                <ConceptArtwork
-                  concept={concept}
-                  mode={concept.raster ? "image" : "vector"}
-                  alt={`${concept.name} logo`}
-                />
-              </div>
-              <div className="gallery-caption">
-                <strong>{concept.name}</strong>
-                <span>{concept.raster ? "Local AI" : "Geometric"}</span>
-              </div>
-            </button>
+              onDelete={(trigger) => requestDelete(concept, trigger)}
+            />
           ))}
         </div>
       ) : selected ? (
@@ -339,22 +360,15 @@ export function CreativeCanvas({
           </div>
           <div className="concept-strip" aria-label="Concepts">
             {concepts.map((concept) => (
-              <button
-                type="button"
-                title={concept.name}
-                aria-label={`Select ${concept.name}`}
-                aria-pressed={concept.id === selected.id}
-                className={`concept-thumbnail ${concept.id === selected.id ? "selected" : ""}`}
+              <ConceptCard
                 key={concept.id}
-                onClick={() => studio.selectConcept(concept.id)}
-              >
-                <ConceptArtwork
-                  concept={concept}
-                  mode={concept.raster ? "image" : "vector"}
-                  alt=""
-                />
-                <span>{concept.name}</span>
-              </button>
+                concept={concept}
+                selected={concept.id === selected.id}
+                layout="thumbnail"
+                disabled={studio.busy}
+                onSelect={() => studio.selectConcept(concept.id)}
+                onDelete={(trigger) => requestDelete(concept, trigger)}
+              />
             ))}
           </div>
         </div>
@@ -365,6 +379,14 @@ export function CreativeCanvas({
         </div>
       )}
       <GenerationBar studio={studio} />
+      {deleting && (
+        <DeleteConceptDialog
+          concept={deleting}
+          studio={studio}
+          onClose={() => setDeleting(null)}
+          restoreFocus={restoreDeleteFocus}
+        />
+      )}
     </main>
   );
 }

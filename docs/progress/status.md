@@ -54,3 +54,5 @@ See `workspace-workflow.md` for custom controls, brand lifecycle/pinning, attach
 See `brand-studio-expansion.md` for editable symbol/text composition, comparison, template mockups, DNA preview, cubic path editing, brand books, motion and prompt clearing. Includes actual local generation and native HTML export evidence; cross-platform release gates remain open.
 
 Select-density follow-up: shared component menus and font previews now use compact single-row options and bounded popup widths; see `compact-selects.md` for validation.
+
+Concept cleanup follow-up: removed the sidebar DNA explanation, repaired the type specimen, aligned gallery art and added confirmed concept deletion from thumbnails/gallery.32 TypeScript tests and12 Chromium flows passed; see `concept-cleanup.md` for behavior and evidence.

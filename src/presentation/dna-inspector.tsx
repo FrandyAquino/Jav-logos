@@ -97,15 +97,21 @@ export function DnaInspector({ studio }: { studio: StudioState }) {
             onValueChange={(typography) => studio.updateDna({ typography })}
           />
         </Field>
-        <div className="type-specimen" style={{ fontFamily: dna.typography }}>
-          <span>Aa</span>
-          <p>
+        <div
+          className="type-specimen"
+          style={{ fontFamily: dna.typography }}
+          aria-label={`${dna.typography} type specimen`}
+        >
+          <span className="type-specimen-mark" aria-hidden="true">
+            Aa
+          </span>
+          <span className="type-specimen-name" title={dna.typography}>
             {dna.typography}
-            <small>
-              ABCDEFGHIJKLMNOPQRSTUVWXYZ
-              <br />
-              abcdefghijklmnopqrstuvwxyz
-            </small>
+          </span>
+          <p className="type-specimen-sample">
+            Aa Bb Cc Dd Ee Ff
+            <br />
+            0123456789 · &amp;@!
           </p>
         </div>
       </div>
