@@ -2,11 +2,12 @@
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
   min-width: 0;
-  min-height: 36px;
-  padding: 8px 10px;
+  height: var(--select-height);
+  min-height: var(--select-height);
+  padding: 5px 9px;
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
   color: var(--text);
@@ -47,22 +48,24 @@
   font-size: 13px;
 }
 .select-content {
-  min-width: var(--radix-select-trigger-width);
-  max-width: min(360px, calc(100vw - 24px));
-  max-height: min(340px, var(--radix-select-content-available-height));
+  width: max(220px, var(--radix-select-trigger-width));
+  max-width: min(320px, calc(100vw - 24px));
+  max-height: min(300px, var(--radix-select-content-available-height));
+  border-radius: 8px;
   overflow: hidden;
 }
 .select-viewport {
-  padding: 5px;
+  padding: 4px;
 }
 .select-option {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 36px;
-  padding: 9px 10px;
-  border-radius: 7px;
+  gap: 8px;
+  min-height: var(--select-option-height);
+  padding: 5px 28px 5px 8px;
+  border-radius: 5px;
   user-select: none;
   cursor: pointer;
   outline: none;
@@ -76,20 +79,33 @@
 }
 .select-option-copy {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
+  flex: 1;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.select-option-copy > span:first-child {
   min-width: 0;
 }
 .select-option-label {
-  line-height: 1.35;
-  overflow-wrap: anywhere;
+  display: block;
+  font-size: 13px;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .select-option-description {
+  flex-shrink: 0;
   color: var(--muted);
   font-family: var(--font-ui);
   font-size: 11px;
+  line-height: 20px;
 }
 .select-check {
+  position: absolute;
+  right: 8px;
   width: 16px;
   flex-shrink: 0;
   display: flex;
@@ -99,18 +115,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 24px;
+  height: 18px;
   color: var(--muted);
 }
 .font-picker-trigger > span:first-child {
-  font-size: 15px;
-}
-.select-option-label[style] {
-  font-size: 17px;
+  font-size: 13px;
 }
 .dialog-field .select-trigger {
-  min-height: 40px;
-  font-size: 14px;
+  min-height: var(--select-height);
+  font-size: 13px;
 }
 .color-field.color-field-control {
   display: flex;

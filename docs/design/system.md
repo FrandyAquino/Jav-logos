@@ -17,3 +17,5 @@ Original AI image, traced vector and editable geometric composition are distinct
 Empty workspace invites brand creation; empty gallery invites generation. Errors remain visible until dismissed; do not replace failed work with sample success. Generation shows the actual provider and supports cancellation. Export cancellation is inert.
 
 Quality gates: `tests/e2e/ui-quality.spec.ts` checks bundled font loading, no runtime Google font request, automated WCAG A/AA checks on settled themes/dialogs, command focus, compact widths and reduced motion. Inspect screenshots in addition to automation. Native macOS and other-platform evidence remain separate.
+
+Select density: shared `SelectField`/`FontPicker` triggers use32px height and13px type. Options use30px rows with font-category descriptions inline, not a second line. Menus cap at320px wide/300px tall even when their trigger stretches across a wide DNA preview panel. Preserve typeface preview, Radix keyboard/typeahead behavior, selection indicators and visible focus. Density tokens live in `tokens.css`.

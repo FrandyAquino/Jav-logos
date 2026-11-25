@@ -52,3 +52,5 @@ See `workspace-workflow.md` for custom controls, brand lifecycle/pinning, attach
 ## Studio expansion
 
 See `brand-studio-expansion.md` for editable symbol/text composition, comparison, template mockups, DNA preview, cubic path editing, brand books, motion and prompt clearing. Includes actual local generation and native HTML export evidence; cross-platform release gates remain open.
+
+Select-density follow-up: shared component menus and font previews now use compact single-row options and bounded popup widths; see `compact-selects.md` for validation.

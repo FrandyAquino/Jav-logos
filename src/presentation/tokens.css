@@ -1,6 +1,8 @@
 :root {
   --radius-panel: 14px;
   --radius-control: 8px;
+  --select-height: 32px;
+  --select-option-height: 30px;
   --space-panel: 16px;
   --duration-ui: 160ms;
   --ease-ui: cubic-bezier(0.2, 0.7, 0.2, 1);
