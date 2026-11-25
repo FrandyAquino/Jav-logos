@@ -1,0 +1,58 @@
+# JavLogos
+
+A local-first desktop logo and brand identity studio for JavCollections, built with Tauri 2, Rust, React and isolated Python inference.
+
+**Current delivery: functional development build, not a certified production release.** Real FLUX.2 Klein 4B generation, reference refinement, tracing, SQLite persistence, native SVG export and restart recovery were exercised on macOS Apple Silicon. Windows/Linux runtime acceptance, signed installers and clean-machine AI provisioning remain release gates.
+
+## Run
+
+Requires Node 24+, Rust 1.90+, platform [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) and Python 3.12/uv for local inference.
+
+```sh
+npm ci
+npm run tauri dev
+```
+
+Geometric concept generation works immediately without an AI model. To enable local FLUX, follow [worker setup](workers/README.md); the worker uses existing local model paths and does not download weights automatically. This workspace has an ignored local configuration for the already-downloaded GGUF model and Metal runtime.
+
+```sh
+npm run dev                       # browser preview; separate browser storage
+npm run tauri build -- --debug --bundles app  # macOS development .app
+npm run tauri build               # host-platform release build
+```
+
+The macOS development app is at `src-tauri/target/debug/bundle/macos/JavLogos.app`. It is unsigned development output, not a redistributable signed release. Release-mode Python setup is described in [native runtime notes](src-tauri/README.md).
+
+## Create a brand identity
+
+1. Create a parent brand and set its palette, typography, geometric language and personality.
+2. Add a sub-brand to inherit those rules. Override a field or reset it to inheritance.
+3. Describe a logo and generate 1–4 concepts. Choose **Geometric concepts** for editable procedural studies or **Local AI · FLUX** for actual model inference. A visual reference applies to local AI.
+4. Inspect the original AI image, trace it to SVG, or edit the separate geometric composition. Save composition versions before exploring changes.
+5. Export composition SVG/PNG, traced SVG, or a ZIP brand kit with original imagery, vector assets, palette and provenance.
+
+If generation finishes but saving fails, keep the window open and choose **Retry save** or **Export recovery copy**. Import that JSON later through the command palette. Recovery import preserves concept IDs and does not rerun inference. Existing IDs are retained rather than overwritten.
+
+Generated raster typography can contain model errors. Composition wordmarks are editable text. Tracing produces paths, but full Bézier node editing, font outlining and print certification are not implemented.
+
+## Verify
+
+```sh
+npm run check
+npx playwright install chromium
+npm run test:e2e
+cargo test --manifest-path src-tauri/Cargo.toml --locked --lib
+cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
+workers/.venv/bin/python -m unittest discover -s workers/tests
+workers/.venv/bin/python workers/smoke.py
+```
+
+Tests do not require cloud accounts. The last command executes the configured local model. Read [verification status](docs/progress/status.md) for what actually ran; CI configuration alone is not proof of platform support.
+
+## Project map
+
+- [Product context](docs/context/product.md), [architecture contracts](docs/architecture/contracts.md), [design system](docs/design/system.md)
+- [Roadmap and acceptance gates](docs/planning/roadmap.md), [testing strategy](docs/testing/strategy.md), [AI research and evidence](docs/research/ai-runtime.md)
+- [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), `.agents/skills/`, `.agents/agents/`, `.agents/workflows/`
+
+No telemetry, required login, subscription or automatic cloud generation. Optional ComfyUI/Diffusers adapters exist but are not live-inference certified here. ImageGen, Figma, Canva and MagicPath are not connected runtime features.
