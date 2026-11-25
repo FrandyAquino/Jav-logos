@@ -1,0 +1,7 @@
+{
+  "provider": "sdcpp",
+  "sd_cli": "/absolute/path/to/sd-cli",
+  "flux_model": "/absolute/path/to/flux-2-klein-4b-Q8_0.gguf",
+  "text_encoder": "/absolute/path/to/Qwen3-4B-Q8_0.gguf",
+  "vae": "/absolute/path/to/flux2-vae.safetensors"
+}

@@ -1,0 +1,153 @@
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: #080b1675;
+  backdrop-filter: blur(5px);
+  z-index: 20;
+  animation: fade-in 120ms ease-out;
+}
+.dialog-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(430px, calc(100% - 32px));
+  max-height: calc(100dvh - 60px);
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--text);
+  padding: 28px;
+  box-shadow: 0 25px 100px #0005;
+  z-index: 21;
+  font-size: 12px;
+}
+.dialog-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+.dialog-content h2 {
+  font-size: 20px;
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  font-weight: 550;
+  margin: 0 0 10px;
+}
+.dialog-content > p {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin: 0 0 25px;
+}
+.dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.dialog-field input,
+.dialog-field select {
+  min-height: 37px;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+}
+.dialog-close {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  background: transparent;
+  color: var(--subtle);
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+}
+.dialog-close:hover {
+  background: var(--surface-hover);
+}
+.command-dialog {
+  padding: 0;
+  width: min(510px, calc(100% - 32px));
+  top: 28%;
+}
+.command-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border-bottom: 1px solid var(--border);
+  color: var(--subtle);
+}
+.command-search input {
+  background: transparent;
+  border: 0;
+  min-width: 0;
+  flex: 1;
+  color: var(--text);
+  padding: 0;
+  box-shadow: none;
+  font-size: 12px;
+}
+.key-close {
+  font-family: inherit;
+  font-size: 9px;
+  color: var(--subtle);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 3px 4px;
+  background: var(--well);
+}
+.command-list {
+  padding: 8px;
+}
+.command-list > button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 12px 10px;
+  background: transparent;
+  border-radius: 5px;
+  font-size: 12px;
+  text-align: left;
+}
+.command-list > button:hover,
+.command-list > button:focus-visible {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.command-list > p {
+  color: var(--subtle);
+  padding: 12px;
+}
+.provider-message {
+  display: flex;
+  gap: 10px;
+  background: var(--well);
+  padding: 15px;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+.provider-message p {
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
