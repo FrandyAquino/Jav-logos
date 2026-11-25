@@ -13,11 +13,11 @@ npm ci
 npm run tauri dev
 ```
 
-Geometric concept generation works immediately without an AI model. To enable local FLUX, follow [worker setup](workers/README.md); the worker uses existing local model paths and does not download weights automatically. This workspace has an ignored local configuration for the already-downloaded GGUF model and Metal runtime.
+Geometric concept generation works immediately without an AI model. To enable local FLUX, follow [worker setup](workers/README.md); the worker uses existing local model paths and does not download weights automatically. Runtime configuration and model files stay local and are not included in this repository.
 
 ```sh
 npm run dev                       # browser preview; separate browser storage
-npm run tauri build -- --debug --bundles app  # macOS development .app
+npm run tauri -- build --debug --bundles app  # macOS development .app
 npm run tauri build               # host-platform release build
 ```
 
@@ -28,15 +28,18 @@ The macOS development app is at `src-tauri/target/debug/bundle/macos/JavLogos.ap
 1. Create a parent brand and set its palette, typography, geometric language and personality.
 2. Add a sub-brand to inherit those rules. Override a field or reset it to inheritance.
 3. Describe a logo and generate 1–4 concepts. Choose **Geometric concepts** for editable procedural studies or **Local AI · FLUX** for actual model inference. A visual reference applies to local AI.
-4. Inspect the original AI image, trace it to SVG, or edit the separate geometric composition. Save composition versions before exploring changes.
+4. Inspect the original AI image or compose its symbol with an editable wordmark and slogan. Arrange layers, convert supported traces to editable paths, and save versions before exploring changes.
 5. Export composition SVG/PNG, traced SVG, or a ZIP brand kit with original imagery, vector assets, palette and provenance. Bundled open fonts are embedded in composition SVG; system fonts still require installation.
-6. Use each brand’s menu to rename, complete, archive/restore or pin it. Drag a brand into Pinned or use Move up/down to reorder.
+6. Compare concepts, keep favorites and notes, preview template mockups, inspect inherited Brand DNA, and export animated SVGs or an editable-in-app brand book as self-contained HTML.
+7. Use each brand’s menu to rename, complete, archive/restore or pin it. Drag a brand into Pinned or use Move up/down to reorder. Delete unwanted concepts from their thumbnail or gallery card after confirmation.
+
+See the [quick-start guide and example prompt](docs/context/quick-start.md). Accepted prompts clear automatically and remain available under Last sent prompt.
 
 Local generation now shows actual worker stages, current image, sampling steps when reported, elapsed time and bounded logs. The runtime loads models once per batch. Refine image reuses the selected raster/prompt as the next reference.
 
 If generation finishes but saving fails, keep the window open and choose **Retry save** or **Export recovery copy**. Import that JSON later through the command palette. Recovery import preserves concept IDs and does not rerun inference. Existing IDs are retained rather than overwritten.
 
-Generated raster typography can contain model errors. Composition wordmarks are editable text. Tracing produces paths, but full Bézier node editing, font outlining and print certification are not implemented.
+Generated raster typography can contain model errors. Composition wordmarks are editable text. Supported traces can be converted to editable Bézier paths with anchor/handle controls and undo/redo. Advanced boolean operations, font outlining and print certification remain outside the current delivery. Inspect long wordmarks and artwork bounds before export.
 
 ## Verify
 
@@ -59,3 +62,7 @@ Tests do not require cloud accounts. The last command executes the configured lo
 - [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), `.agents/skills/`, `.agents/agents/`, `.agents/workflows/`
 
 No telemetry, required login, subscription or automatic cloud generation. Optional ComfyUI/Diffusers adapters exist but are not live-inference certified here. ImageGen, Figma, Canva and MagicPath are not connected runtime features.
+
+## Repository and automation
+
+Source: [FrandyAquino/Jav-logos](https://github.com/FrandyAquino/Jav-logos), branch `main`. GitHub Actions runs frontend/browser and Python checks plus native build checks for macOS, Windows and Linux on pushes and pull requests. A successful CI build does not certify native runtime behavior or provide a signed installer. Model weights, local configuration, databases and generated assets are excluded from Git.

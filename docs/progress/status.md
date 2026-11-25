@@ -43,7 +43,7 @@ This is a functional development build, **not a production-certified cross-platf
 
 Workspace snapshots load assets into memory and retain unreferenced asset files after failures; large-workspace profiling, lazy asset loading and safe garbage collection remain future work. Recovery copies protect completed batches after save failures; forced app termination/power loss during unsaved work has not been certified. The frontend close guard covers window-close handling; platform menu-quit behavior with an unsaved recovery batch still needs native acceptance, and operating-system force quit is outside that guard.
 
-No repository remote was configured, no PR was published, and CI jobs have not run remotely. The app remains open with clearly named native QA data for inspection. Local runtime configuration, model files, databases and generated evidence are ignored by Git.
+GitHub publication target: `https://github.com/FrandyAquino/Jav-logos`, branch `main`. Remote CI results must be checked independently; previous local evidence does not certify them. No PR or signed release is included in this publication. The app remains open with clearly named native QA data for inspection. Local runtime configuration, model files, databases and generated evidence are ignored by Git.
 
 ## Workspace workflow continuation
 
