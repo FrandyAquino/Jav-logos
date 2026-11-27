@@ -156,6 +156,18 @@ export const conceptSchema = z.object({
   raster: png.optional(),
   cutout: png.optional(),
   derivedFrom: identifier.optional(),
+  refinement: z
+    .object({
+      kind: z.enum(["composition", "ai"]),
+      instruction: z
+        .string()
+        .trim()
+        .min(1)
+        .max(1500)
+        .refine((value) => !value.includes("\0")),
+      before: png,
+    })
+    .optional(),
   reference: png.optional(),
   generationContext: z
     .object({
@@ -213,6 +225,11 @@ export const workspaceSchema = z
     const brands = new Set(value.brands.map((b) => b.id));
     const ids = new Set<string>();
     for (const concept of value.concepts) {
+      if (concept.refinement && !concept.derivedFrom)
+        ctx.addIssue({
+          code: "custom",
+          message: "Refinement requires source provenance.",
+        });
       for (const doc of [
         concept.document,
         ...concept.versions.map((v) => v.document),

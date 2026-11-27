@@ -23,6 +23,7 @@ import {
   DnaMapView,
   MotionView,
 } from "./studio-views";
+import { RefinementView } from "./refinement-view";
 import { VectorEditor } from "./vector-editor";
 import { BrandBookView } from "./brand-book-view";
 import "./brand-book.css";
@@ -65,7 +66,14 @@ export function CreativeCanvas({
   };
   const [gallery, setGallery] = useState(false);
   const [surface, setSurface] = useState<
-    "canvas" | "compare" | "mockups" | "dna" | "edit" | "book" | "motion"
+    | "canvas"
+    | "compare"
+    | "mockups"
+    | "dna"
+    | "edit"
+    | "book"
+    | "motion"
+    | "refine"
   >("canvas");
   const [viewActivity, setViewActivity] = useState(true);
   const [view, setView] = useState<"vector" | "image" | "trace">("image");
@@ -77,10 +85,10 @@ export function CreativeCanvas({
   );
   const selected = studio.selectedConcept;
   useEffect(() => {
-    if (selected?.document.useCutout) setView("vector");
-  }, [selected?.id, selected?.document.useCutout]);
+    if (selected?.document.useCutout || selected?.refinement) setView("vector");
+  }, [selected?.id, selected?.document.useCutout, selected?.refinement]);
   const generationActive = generationIsActive(studio);
-  const showActivity = generationActive && viewActivity;
+  const showActivity = generationActive && viewActivity && surface !== "refine";
   useEffect(() => {
     if (studio.generationStartedAt !== null) setViewActivity(true);
   }, [studio.generationStartedAt]);
@@ -128,7 +136,7 @@ export function CreativeCanvas({
         <div className="view-switch" role="group" aria-label="Workspace view">
           <IconButton
             label="Canvas view"
-            active={!gallery && !showActivity}
+            active={surface === "canvas" && !gallery && !showActivity}
             disabled={!concepts.length}
             onClick={() => {
               setGallery(false);
@@ -140,7 +148,7 @@ export function CreativeCanvas({
           </IconButton>
           <IconButton
             label="Gallery view"
-            active={gallery && !showActivity}
+            active={surface === "canvas" && gallery && !showActivity}
             disabled={!concepts.length}
             onClick={() => {
               setGallery(true);
@@ -154,7 +162,10 @@ export function CreativeCanvas({
             <IconButton
               label="Generation activity"
               active={showActivity}
-              onClick={() => setViewActivity(true)}
+              onClick={() => {
+                setSurface("canvas");
+                setViewActivity(true);
+              }}
             >
               <Activity size={15} />
             </IconButton>
@@ -165,6 +176,7 @@ export function CreativeCanvas({
         <div className="studio-tools" role="group" aria-label="Studio tools">
           {(
             [
+              ["refine", "Refine"],
               ["compare", "Compare"],
               ["mockups", "Mockups"],
               ["dna", "DNA map"],
@@ -188,7 +200,7 @@ export function CreativeCanvas({
           ))}
         </div>
       )}
-      {!showActivity && studio.generationProgress && (
+      {!showActivity && surface !== "refine" && studio.generationProgress && (
         <details className="last-generation">
           <summary>
             <Activity size={14} />
@@ -203,6 +215,8 @@ export function CreativeCanvas({
       )}
       {showActivity ? (
         <GenerationProgressPanel studio={studio} />
+      ) : surface === "refine" ? (
+        <RefinementView studio={studio} />
       ) : surface === "compare" ? (
         <CompareView studio={studio} />
       ) : surface === "mockups" ? (
@@ -351,11 +365,14 @@ export function CreativeCanvas({
                 type="button"
                 className="subtle-button"
                 disabled={studio.busy || studio.referenceLoading}
-                onClick={() => void studio.refineConcept()}
-                title="Use this image and its prompt as the next reference"
+                onClick={() => {
+                  setSurface("refine");
+                  setViewActivity(false);
+                }}
+                title="Refine the current composition or reinterpret its symbol"
               >
                 <RefreshCw size={13} />
-                Refine image
+                Refine symbol
               </button>
             ) : (
               <span className="canvas-fit">Fit to canvas</span>
@@ -381,7 +398,9 @@ export function CreativeCanvas({
           <p>Select a concept to begin editing.</p>
         </div>
       )}
-      <GenerationBar studio={studio} />
+      <div className="workspace-composer" hidden={surface === "refine"}>
+        <GenerationBar studio={studio} />
+      </div>
       {deleting && (
         <DeleteConceptDialog
           concept={deleting}

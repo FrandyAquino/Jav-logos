@@ -13,3 +13,9 @@ Example for a JavCollections brand:
 > Diseña un símbolo minimalista y distintivo para JavCollections, una familia de herramientas creativas. Combina cuatro módulos geométricos en una forma compacta que sugiera conexión, orden y creatividad. Silueta clara, equilibrio visual y espacio negativo bien definido. Usa el color principal de Brand DNA sobre fondo blanco. Debe funcionar como icono de aplicación y seguir siendo reconocible en pequeño. Diseño plano, sin degradados, sombras, mockups ni texto; el nombre se añadirá como tipografía editable.
 
 Local AI readiness verifies the installed runtime configuration; Windows/Linux packaging and clean-machine provisioning still require their own acceptance. The default geometric provider creates deterministic editable studies and does not run an AI model.
+
+## Refine a saved direction
+
+Select a concept and open **Refine**. **Exact edit** previews editable colors and typography; **Save refined copy** creates a separate result. For transparent image symbols, an explicit cutout tint preserves alpha/shape. **Local AI** offers Simplify/More geometric/More organic or your own instruction and uses the composition's symbol as its reference. It retains the editable name/slogan/layout; inspect the before/after pair because model preservation requests are not exact locks. Use **Refinement versions** to revisit saved results or **Open source** to return to the original.
+
+Example: “Simplifica los detalles interiores, conserva la silueta reconocible y la paleta actual, y mejora la legibilidad a tamaño pequeño.”

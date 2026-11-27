@@ -35,6 +35,18 @@ import {
 } from "../infrastructure/delivery-variants";
 import { outlineComposition } from "../infrastructure/font-outlines";
 import { fitDocumentText } from "../infrastructure/text-fitting";
+import {
+  compositionChangesSchema,
+  describeCompositionChanges,
+  refinementInstructionSchema,
+  buildSymbolRefinementPrompt,
+  type CompositionChanges,
+} from "../domain/refinement";
+import {
+  snapshotComposition,
+  previewCompositionRefinement,
+  prepareSymbolReference,
+} from "../infrastructure/refinement-preview";
 import { buildBrandBook } from "../infrastructure/brand-book";
 
 interface StudioState {
@@ -353,22 +365,30 @@ const actions = {
     const prompt = get().submittedPrompt;
     if (prompt !== null) set({ prompt });
   },
-  async generate(provider: "procedural" | "local", count: number) {
-    if (get().busy || get().referenceLoading) return;
+  async generate(
+    provider: "procedural" | "local",
+    count: number,
+    refinement?: { sourceId: string; instruction: string },
+  ): Promise<boolean> {
+    let completed = false;
+    if (get().busy || get().referenceLoading) return false;
     if (!Number.isInteger(count) || count < 1 || count > 4) {
       fail(new Error("Choose one to four concepts."));
-      return;
+      return false;
     }
     if (get().pendingConcepts.length) {
       fail(
         new Error("Save or export the pending batch before generating again."),
       );
-      return;
+      return false;
     }
-    const brandId = get().selectedBrandId;
-    const submittedPrompt = get().prompt;
-    const referenceUrl = get().referenceUrl;
-    const generationTarget = get().generationTarget;
+    const brandId = refinement
+      ? (get().workspace.concepts.find((c) => c.id === refinement.sourceId)
+          ?.brandId ?? null)
+      : get().selectedBrandId;
+    const submittedPrompt = refinement?.instruction ?? get().prompt;
+    let referenceUrl = refinement ? null : get().referenceUrl;
+    const generationTarget = refinement ? "symbol" : get().generationTarget;
     const jobId = crypto.randomUUID();
     activeJob = jobId;
     set({
@@ -398,7 +418,7 @@ const actions = {
     });
     try {
       await flushWrites();
-      if (activeJob !== jobId) return;
+      if (activeJob !== jobId) return false;
       const state = get();
       const brand = state.workspace.brands.find((b) => b.id === brandId);
       if (!brand) throw new Error("Create or select a brand first.");
@@ -407,7 +427,7 @@ const actions = {
         throw new Error("Restore this archived brand before generating.");
       if (!submittedPrompt.trim())
         throw new Error("Describe the logo you want to create.");
-      if (get().prompt === submittedPrompt) set({ prompt: "" });
+      if (!refinement && get().prompt === submittedPrompt) set({ prompt: "" });
       set({ submittedPrompt });
       const dna = resolveDna(brand.id, state.workspace.brands);
       const seed = crypto.getRandomValues(new Uint32Array(1))[0] % 2147483647;
@@ -419,12 +439,46 @@ const actions = {
         count,
         seed,
       );
-      const effectivePrompt =
-        buildPrompt(submittedPrompt, brand.name, dna) +
-        (generationTarget === "symbol"
-          ? " Create only the standalone symbol. No letters, words, lettering, slogans or typography; the studio adds editable text separately."
-          : "");
+      const effectivePrompt = refinement
+        ? buildSymbolRefinementPrompt(submittedPrompt)
+        : buildPrompt(submittedPrompt, brand.name, dna) +
+          (generationTarget === "symbol"
+            ? " Create only the standalone symbol. No letters, words, lettering, slogans or typography; the studio adds editable text separately."
+            : "");
+      const source = refinement
+        ? structuredClone(selectedConcept(refinement.sourceId))
+        : null;
+      let before: string | undefined;
+      if (source) {
+        if (provider !== "local")
+          throw new Error("AI refinement requires the local provider.");
+        progressPhase("starting", "Preparing the selected symbol reference");
+        [before, referenceUrl] = await Promise.all([
+          snapshotComposition(source),
+          prepareSymbolReference(source),
+        ]);
+        if (activeJob !== jobId) return false;
+      }
       for (const concept of concepts) {
+        if (source && before) {
+          concept.derivedFrom = source.id;
+          concept.refinement = {
+            kind: "ai",
+            instruction: submittedPrompt,
+            before,
+          };
+          concept.document = {
+            ...structuredClone(source.document),
+            symbolSource: "image",
+            useCutout: false,
+            monochrome: false,
+            motion:
+              source.document.motion === "draw"
+                ? "none"
+                : source.document.motion,
+          };
+          delete concept.document.paths;
+        }
         concept.generationContext = {
           effectivePrompt:
             provider === "local" ? effectivePrompt : submittedPrompt,
@@ -461,14 +515,16 @@ const actions = {
             raster: `data:image/png;base64,${image.pngBase64}`,
             seed: image.seed,
             provider: response.provider,
-            name: `AI concept ${index + 1}`,
+            name: refinement
+              ? `Refined symbol ${index + 1}`
+              : `AI concept ${index + 1}`,
             ...(referenceUrl ? { reference: referenceUrl } : {}),
           });
           if (generationTarget === "symbol")
             concepts[index].document.symbolSource = "image";
         });
       }
-      if (activeJob !== jobId) return;
+      if (activeJob !== jobId) return false;
       set({
         cancellable: false,
         pendingConcepts: concepts,
@@ -481,13 +537,17 @@ const actions = {
       if (
         await persist((w) => ({ ...w, concepts: [...w.concepts, ...concepts] }))
       ) {
-        if (get().selectedBrandId === brand.id)
+        if (
+          get().selectedBrandId === brand.id &&
+          (!refinement || get().selectedConceptId === refinement.sourceId)
+        )
           set({ selectedConceptId: concepts[0].id });
         set({
           pendingConcepts: [],
           status: `${concepts.length} concepts saved`,
         });
         progressPhase("completed", `${concepts.length} concepts saved`);
+        completed = true;
       } else
         progressPhase(
           "failed",
@@ -500,7 +560,7 @@ const actions = {
           provider === "local"
             ? await desktop.generationProgress(jobId).catch(() => null)
             : null;
-        if (activeJob !== jobId) return;
+        if (activeJob !== jobId) return false;
         if (latest?.jobId === jobId) set({ generationProgress: latest });
         fail(error);
         progressPhase("failed", desktop.message(error));
@@ -514,6 +574,7 @@ const actions = {
       if (activeJob === jobId) activeJob = null;
       set({ busy: false, cancellable: false });
     }
+    return completed;
   },
   async retryPendingSave() {
     const concepts = get().pendingConcepts;
@@ -534,8 +595,13 @@ const actions = {
       set({
         pendingConcepts: [],
         error: null,
-        selectedBrandId: concepts[0].brandId,
-        selectedConceptId: concepts[0].id,
+        ...(!concepts[0].refinement ||
+        get().selectedConceptId === concepts[0].derivedFrom
+          ? {
+              selectedBrandId: concepts[0].brandId,
+              selectedConceptId: concepts[0].id,
+            }
+          : {}),
       });
       progressPhase("completed", "Recovered concepts saved");
     } else
@@ -1030,6 +1096,81 @@ const actions = {
     } finally {
       if (sequence === referenceSequence) set({ referenceLoading: false });
     }
+  },
+  async refineWithAi(
+    sourceId: string,
+    instruction: string,
+    count: number,
+  ): Promise<boolean> {
+    let saved = false;
+    await guarded(async () => {
+      saved = await actions.generate("local", count, {
+        sourceId,
+        instruction: refinementInstructionSchema.parse(instruction),
+      });
+    });
+    return saved;
+  },
+  async refineComposition(
+    sourceId: string,
+    input: CompositionChanges,
+  ): Promise<boolean> {
+    if (get().busy || get().pendingConcepts.length) return false;
+    set({
+      busy: true,
+      error: null,
+      status: "Preparing composition refinement…",
+    });
+    let saved = false;
+    const id = crypto.randomUUID();
+    await guarded(async () => {
+      const changes = compositionChangesSchema.parse(input);
+      const instruction = describeCompositionChanges(changes);
+      if (!instruction)
+        throw new Error(
+          "Change a color, typeface or cutout tint before saving.",
+        );
+      saved = await persist(
+        async (workspace) => {
+          const source = workspace.concepts.find((c) => c.id === sourceId);
+          if (!source)
+            throw new Error("The source concept is no longer available.");
+          if (
+            workspace.brands.find((b) => b.id === source.brandId)?.status ===
+            "archived"
+          )
+            throw new Error("Restore this archived brand before refining it.");
+          const [before, preview] = await Promise.all([
+            snapshotComposition(source),
+            previewCompositionRefinement(source, changes),
+          ]);
+          if (
+            JSON.stringify(preview.document) ===
+              JSON.stringify(source.document) &&
+            preview.cutout === source.cutout
+          )
+            throw new Error("This refinement does not change the composition.");
+          const concept: Concept = {
+            ...structuredClone(preview),
+            id,
+            derivedFrom: sourceId,
+            name: `${source.name.slice(0, 108)} · edit`,
+            createdAt: new Date().toISOString(),
+            versions: [],
+            favorite: false,
+            refinement: { kind: "composition", instruction, before },
+          };
+          return { ...workspace, concepts: [...workspace.concepts, concept] };
+        },
+        () => {
+          if (get().selectedConceptId === sourceId)
+            set({ selectedConceptId: id });
+          set({ status: "Composition refinement saved; original preserved" });
+        },
+      );
+    });
+    set({ busy: false });
+    return saved;
   },
   async refineConcept() {
     await guarded(async () => {

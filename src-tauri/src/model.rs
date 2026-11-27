@@ -87,12 +87,22 @@ pub struct Concept {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub derived_from: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub refinement: Option<Refinement>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub reference: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub traced_svg: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub generation_context: Option<GenerationContext>,
     pub versions: Vec<ConceptVersion>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Refinement {
+    pub kind: String,
+    pub instruction: String,
+    pub before: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -223,6 +233,15 @@ impl Workspace {
                 return Err(AppError::invalid("Duplicate concept or missing brand"));
             }
             bounded(&concept.name, 120, "Concept name")?;
+            if let Some(refinement) = &concept.refinement {
+                if concept.derived_from.is_none()
+                    || !["composition", "ai"].contains(&refinement.kind.as_str())
+                    || refinement.instruction.trim().is_empty()
+                {
+                    return Err(AppError::invalid("Invalid refinement provenance"));
+                }
+                bounded(&refinement.instruction, 1500, "Refinement instruction")?;
+            }
             if let Some(source) = &concept.derived_from {
                 identifier(source)?;
             }
@@ -274,6 +293,12 @@ impl Workspace {
             for raster in [&concept.raster, &concept.reference, &concept.cutout]
                 .into_iter()
                 .flatten()
+                .chain(
+                    concept
+                        .refinement
+                        .as_ref()
+                        .map(|refinement| &refinement.before),
+                )
             {
                 bounded(raster, 16_000_000, "Raster")?;
                 if !(raster.starts_with("data:image/png;base64,")

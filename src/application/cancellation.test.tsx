@@ -23,7 +23,7 @@ it("discards a late image when cancellation is requested before the worker ackno
   await act(async () => {
     await result.current.createBrand("Cancel test");
   });
-  let generating: Promise<void>;
+  let generating: Promise<boolean>;
   let cancelling: Promise<void>;
   act(() => {
     generating = result.current.generate("local", 1);

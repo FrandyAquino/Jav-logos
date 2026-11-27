@@ -41,6 +41,10 @@ If generation finishes but saving fails, keep the window open and choose **Retry
 
 Generated raster typography can contain model errors. Composition wordmarks are editable text. Supported traces can be converted to editable Bézier paths with anchor/handle controls and undo/redo. Prepare for delivery adds flat-background removal, automatic text fitting, transparent canvases, logo variants and font outlines using bundled typefaces. Advanced boolean operations and print certification remain outside the current delivery. Inspect small text and artwork bounds before export.
 
+## Refine a direction
+
+Open **Refine** on a saved concept. Preview exact color/typeface edits, or choose **Local AI** to simplify/reinterpret the symbol with a natural-language instruction. Each result is a separate concept with a persistent before/after snapshot and source provenance. The local AI route retains editable wordmarks/slogans and uses a symbol-only reference. Preservation is model guidance, not a guaranteed geometry lock.
+
 ## Prepare a logo for delivery
 
 In **Design → Prepare for delivery**, enable **Auto-fit name and slogan** and **Transparent canvas**. For an AI image with a uniform background, use **Remove flat background**, inspect the preview and save a new cutout concept. The original remains intact.

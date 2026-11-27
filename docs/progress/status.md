@@ -60,3 +60,5 @@ Concept cleanup follow-up: removed the sidebar DNA explanation, repaired the typ
 Delivery preparation implemented and verified: see `delivery-preparation.md` for transparent cutouts, fitted text, bundled-font outlines, variant/favicons and native ZIP evidence. Latest local counts:49 TypeScript,23 Rust,11 Python and15 Chromium flows. Initial remote CI passed frontend/Python/Linux; macOS fixture timing and missing Windows icon were corrected locally, with remote rerun pending.
 
 Reference image paste/drop follow-up: see [reference-paste-drop.md](reference-paste-drop.md) for composer clipboard/drop behavior, 66 TypeScript tests, 10 scoped Chromium regressions and 23 Rust tests passed; native Tauri paste/drop acceptance remains unrun.
+
+Directed refinement added2026-11-27: exact palette/typeface previews and independent saved copies, local AI symbol reinterpretation, persistent before/after snapshots and refinement history.70 TypeScript tests,23 Rust tests,11 Python tests and20 Chromium flows passed; native exact edit and real FLUX refinement also passed. See `directed-refinement.md` for commands, Node25 test compatibility and evidence.

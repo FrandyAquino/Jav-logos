@@ -101,6 +101,11 @@ export interface Concept {
   raster?: string;
   cutout?: string;
   derivedFrom?: string;
+  refinement?: {
+    kind: "composition" | "ai";
+    instruction: string;
+    before: string;
+  };
   reference?: string;
   tracedSvg?: string;
   generationContext?: {
