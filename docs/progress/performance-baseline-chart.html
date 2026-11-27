@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        color: var(--foreground, #ddd);
+        font-family: var(--font-sans, system-ui);
+        margin: 0;
+      }
+      h2 {
+        font-size: 16px;
+        margin: 8px 0;
+      }
+      p {
+        font-size: 12px;
+        color: var(--muted-foreground, #999);
+        margin: 4px 0 12px;
+      }
+      svg {
+        width: 100%;
+        height: 220px;
+        overflow: visible;
+      }
+      svg text {
+        fill: var(--muted-foreground, #999);
+        font-size: 12px;
+      }
+      .legend {
+        display: flex;
+        gap: 18px;
+        font-size: 12px;
+        flex-wrap: wrap;
+      }
+      small {
+        font-size: 12px;
+        color: var(--muted-foreground, #999);
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Native Rust storage · five-run medians</h2>
+    <p>
+      Milliseconds vs concept count. Actual temporary SQLite/filesystem;
+      excludes Tauri IPC and WebKit.
+    </p>
+    <svg viewBox="0 0 680 240" role="img" aria-label="Measured scaling in ms">
+      <path d="M55 200.0H650" stroke="var(--border)" />
+      <text x="47" y="204.0" text-anchor="end">0</text>
+      <path d="M55 160.0H650" stroke="var(--border)" />
+      <text x="47" y="164.0" text-anchor="end">112</text>
+      <path d="M55 120.0H650" stroke="var(--border)" />
+      <text x="47" y="124.0" text-anchor="end">225</text>
+      <path d="M55 80.0H650" stroke="var(--border)" />
+      <text x="47" y="84.0" text-anchor="end">338</text>
+      <path d="M55 40.0H650" stroke="var(--border)" />
+      <text x="47" y="44.0" text-anchor="end">450</text>
+      <text x="70" y="224" text-anchor="middle">100</text>
+      <text x="192" y="224" text-anchor="middle">500</text>
+      <text x="650" y="224" text-anchor="middle">2000</text>
+      <polyline
+        points="70.0,195.2 192.0,179.5 650.0,43.2"
+        fill="none"
+        stroke="#60a5fa"
+        stroke-width="2.5"
+      />
+      <circle cx="70" cy="195.2041184" r="4" fill="#60a5fa">
+        <title>Load: 13.49 ms</title>
+      </circle>
+      <circle cx="192" cy="179.5259111111111" r="4" fill="#60a5fa">
+        <title>Load: 57.58 ms</title>
+      </circle>
+      <circle cx="650" cy="43.19660728888891" r="4" fill="#60a5fa">
+        <title>Load: 441.01 ms</title>
+      </circle>
+      <polyline
+        points="70.0,196.0 192.0,183.8 650.0,127.6"
+        fill="none"
+        stroke="#34d399"
+        stroke-width="2.5"
+      />
+      <circle cx="70" cy="195.9988743111111" r="4" fill="#34d399">
+        <title>Save one: 11.25 ms</title>
+      </circle>
+      <circle cx="192" cy="183.8183704888889" r="4" fill="#34d399">
+        <title>Save one: 45.51 ms</title>
+      </circle>
+      <circle cx="650" cy="127.55677048888889" r="4" fill="#34d399">
+        <title>Save one: 203.75 ms</title>
+      </circle>
+      <polyline
+        points="70.0,198.9 192.0,195.3 650.0,180.8"
+        fill="none"
+        stroke="#fbbf24"
+        stroke-width="2.5"
+      />
+      <circle cx="70" cy="198.9054961777778" r="4" fill="#fbbf24">
+        <title>Stale reject: 3.08 ms</title>
+      </circle>
+      <circle cx="192" cy="195.30638506666668" r="4" fill="#fbbf24">
+        <title>Stale reject: 13.20 ms</title>
+      </circle>
+      <circle cx="650" cy="180.78825173333334" r="4" fill="#fbbf24">
+        <title>Stale reject: 54.03 ms</title>
+      </circle>
+    </svg>
+    <div class="legend">
+      <span style="color: #60a5fa">● Load</span
+      ><span style="color: #34d399">● Save one concept</span
+      ><span style="color: #fbbf24">● Reject stale snapshot</span>
+    </div>
+    <h2>Full snapshot sent for one edit</h2>
+    <p>
+      MiB of serialized IPC arguments vs concept count. Node measurement; no
+      bridge timing.
+    </p>
+    <svg viewBox="0 0 680 240" role="img" aria-label="Measured scaling in MiB">
+      <path d="M55 200.0H650" stroke="var(--border)" />
+      <text x="47" y="204.0" text-anchor="end">0</text>
+      <path d="M55 160.0H650" stroke="var(--border)" />
+      <text x="47" y="164.0" text-anchor="end">20</text>
+      <path d="M55 120.0H650" stroke="var(--border)" />
+      <text x="47" y="124.0" text-anchor="end">40</text>
+      <path d="M55 80.0H650" stroke="var(--border)" />
+      <text x="47" y="84.0" text-anchor="end">60</text>
+      <path d="M55 40.0H650" stroke="var(--border)" />
+      <text x="47" y="44.0" text-anchor="end">80</text>
+      <text x="70" y="224" text-anchor="middle">100</text>
+      <text x="192" y="224" text-anchor="middle">500</text>
+      <text x="650" y="224" text-anchor="middle">2000</text>
+      <polyline
+        points="70.0,193.1 192.0,165.7 650.0,62.6"
+        fill="none"
+        stroke="#a78bfa"
+        stroke-width="2.5"
+      />
+      <circle cx="70" cy="193.13109588623047" r="4" fill="#a78bfa">
+        <title>Payload: 3.43 MiB</title>
+      </circle>
+      <circle cx="192" cy="165.66249084472656" r="4" fill="#a78bfa">
+        <title>Payload: 17.17 MiB</title>
+      </circle>
+      <circle cx="650" cy="62.6350040435791" r="4" fill="#a78bfa">
+        <title>Payload: 68.68 MiB</title>
+      </circle></svg
+    ><small
+      >100 / 500 / 2,000 concepts · PNG 512×512, ≈18.6 kB each · M5 / 24 GB /
+      macOS 27.0.1. Lines connect measured points only.</small
+    >
+  </body>
+</html>

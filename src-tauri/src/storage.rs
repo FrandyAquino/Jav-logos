@@ -15,6 +15,11 @@ use std::{
 
 const MAX_WORKSPACE_BYTES: usize = 128 * 1024 * 1024;
 
+// Opt-in diagnostics; no production exports or normal-test fixture generation.
+#[cfg(test)]
+#[path = "../tests/perf/workspace-perf.rs"]
+mod performance_tests;
+
 #[derive(Clone)]
 pub struct Store {
     root: PathBuf,

@@ -1,0 +1,647 @@
+{
+  "measuredAt": "2026-11-27",
+  "baseCommit": "6a6b6fb51229dca879a8ae869b9074ca7d67cc7d",
+  "command": "node scripts/performance-baseline.mjs",
+  "machine": {
+    "os": "macOS 27.0.1",
+    "build": "26A434",
+    "chip": "Apple M5",
+    "cores": 10,
+    "memoryGiB": 24,
+    "node": "24.22.2",
+    "rust": "1.96.0",
+    "target": "aarch64-apple-darwin"
+  },
+  "scope": {
+    "rust": "Release Store calls with actual temporary SQLite/filesystem; no Tauri IPC",
+    "typescript": "Node/jsdom, real store/components, mocked desktop ack and argument serialization; no native image decode"
+  },
+  "sourceStart": {
+    "src-tauri/src/storage.rs": "f8204180da76fa8aa9f4cb46098554f939d9c86763731727db0350ff13a8004a",
+    "src-tauri/src/model.rs": "d89ad39bc893c5b487dba68075c374923e5d62cedfd553cef2486a7c08520528",
+    "src/application/use-studio.ts": "48ee7676bec305ce6f981ea5823bd838cffbceac39e1934dc6cbe4e3b65594e6",
+    "src/domain/schema.ts": "a1349d0c611b90d2d35f85344730c33257e85361e4c2f65ae352fafa45010838",
+    "src/presentation/concept-card.tsx": "d89fd1394e34b0bd970d79fd849ae5a4870d95034baea23af4f31f677904c007",
+    "src/presentation/creative-canvas.tsx": "5356a9658f0c486dfb2096ad78c574c2a4206f77d01083930f06f5611dfd369b",
+    "src/presentation/brand-sidebar.tsx": "11fa49431e142ca5d47acbec1a5b347fd04da6ad5031e27bf2f94b8a124554b7"
+  },
+  "sourceEnd": {
+    "src-tauri/src/storage.rs": "274017a2feacd18f33180dcc46a56f0dc5ad8e7cf42c52bd9087a6d6e34cc636",
+    "src-tauri/src/model.rs": "d89ad39bc893c5b487dba68075c374923e5d62cedfd553cef2486a7c08520528",
+    "src/application/use-studio.ts": "be6e02f1b663ac27058263764db12fd8da575cfb4012f7ad4775cb0fd4922901",
+    "src/domain/schema.ts": "be464131e06a2d1405dda4579c916504540bacf5317647caf5b5be5528533224",
+    "src/presentation/concept-card.tsx": "d89fd1394e34b0bd970d79fd849ae5a4870d95034baea23af4f31f677904c007",
+    "src/presentation/creative-canvas.tsx": "5356a9658f0c486dfb2096ad78c574c2a4206f77d01083930f06f5611dfd369b",
+    "src/presentation/brand-sidebar.tsx": "11fa49431e142ca5d47acbec1a5b347fd04da6ad5031e27bf2f94b8a124554b7"
+  },
+  "sourceDrift": [
+    "src-tauri/src/storage.rs",
+    "src/application/use-studio.ts",
+    "src/domain/schema.ts"
+  ],
+  "fixtures": [
+    {
+      "fixture": 100,
+      "brands": 10,
+      "pngBytes": 18571,
+      "payloadBytes": 3599861
+    },
+    {
+      "fixture": 500,
+      "brands": 50,
+      "pngBytes": 18571,
+      "payloadBytes": 18001321
+    },
+    {
+      "fixture": 2000,
+      "brands": 200,
+      "pngBytes": 18571,
+      "payloadBytes": 72017396
+    }
+  ],
+  "rust": [
+    {
+      "brands": 10,
+      "concepts": 100,
+      "disk": {
+        "assetBytes": 1984280,
+        "assetCountAfterDelete": 200,
+        "dbSnapshotBytes": 135450,
+        "diskBytesAfterFailure": 2434907,
+        "failedSaveNewOrphans": 1,
+        "journal": "wal",
+        "synchronous": 2,
+        "unreferencedAfterBackupAdvance": 2
+      },
+      "inputBytes": 3599861,
+      "medianMs": {
+        "deleteOne": 11.478667,
+        "load": 13.488417,
+        "replayExistingAssetsOnly": 6.2836669999999994,
+        "saveAll": 10.651792,
+        "saveOne": 11.253166,
+        "seed": 1640.243833,
+        "serializeOnly": 1.522125,
+        "staleReject": 3.078292,
+        "validateOnly": 1.3716659999999998
+      },
+      "runs": 5,
+      "samplesMs": [
+        [
+          1618.206625, 1619.8160000000003, 1640.243833, 1762.1375,
+          1837.9658330000002
+        ],
+        [11.686708000000001, 12.343292, 13.488417, 14.344208, 15.365083],
+        [9.728375, 10.874334, 11.253166, 11.579832999999999, 14.099792],
+        [9.689334, 10.100792, 10.651792, 10.93775, 14.261833],
+        [9.707500000000001, 9.974084, 11.478667, 14.503833, 27.079875],
+        [2.936208, 2.984375, 3.078292, 3.437375, 14.302416000000001],
+        [1.338917, 1.3444170000000002, 1.3716659999999998, 1.4255, 2.1175],
+        [1.216375, 1.223458, 1.522125, 1.6438329999999999, 2.094792],
+        [
+          5.840667, 6.160208000000001, 6.2836669999999994, 7.839416999999999,
+          11.577833
+        ]
+      ]
+    },
+    {
+      "brands": 50,
+      "concepts": 500,
+      "disk": {
+        "assetBytes": 9922280,
+        "assetCountAfterDelete": 1000,
+        "dbSnapshotBytes": 684830,
+        "diskBytesAfterFailure": 12019499,
+        "failedSaveNewOrphans": 1,
+        "journal": "wal",
+        "synchronous": 2,
+        "unreferencedAfterBackupAdvance": 2
+      },
+      "inputBytes": 18001321,
+      "medianMs": {
+        "deleteOne": 47.160083,
+        "load": 57.583375,
+        "replayExistingAssetsOnly": 28.2475,
+        "saveAll": 45.026666,
+        "saveOne": 45.510833,
+        "seed": 7943.820042,
+        "serializeOnly": 5.787375,
+        "staleReject": 13.200792,
+        "validateOnly": 6.5552079999999995
+      },
+      "runs": 5,
+      "samplesMs": [
+        [
+          7777.9365, 7935.5064999999995, 7943.820042, 8277.675916,
+          8418.207083000001
+        ],
+        [54.76925, 56.202875, 57.583375, 58.183, 58.580666],
+        [
+          43.797333, 44.765916000000004, 45.510833, 46.759750000000004,
+          50.478750000000005
+        ],
+        [43.338417, 44.491583, 45.026666, 46.896167000000005, 48.422],
+        [
+          43.206209, 44.723040999999995, 47.160083, 50.592208,
+          51.485499999999995
+        ],
+        [12.507708, 12.848792, 13.200792, 13.443916999999999, 13.731042],
+        [6.433917, 6.475334, 6.5552079999999995, 6.720917, 6.8615],
+        [5.6951670000000005, 5.781042, 5.787375, 5.941209000000001, 6.185458],
+        [27.819041, 28.169249999999998, 28.2475, 28.390249999999998, 28.958458]
+      ]
+    },
+    {
+      "brands": 200,
+      "concepts": 2000,
+      "disk": {
+        "assetBytes": 39691780,
+        "assetCountAfterDelete": 4000,
+        "dbSnapshotBytes": 2749205,
+        "diskBytesAfterFailure": 47990343,
+        "failedSaveNewOrphans": 1,
+        "journal": "wal",
+        "synchronous": 2,
+        "unreferencedAfterBackupAdvance": 2
+      },
+      "inputBytes": 72017396,
+      "medianMs": {
+        "deleteOne": 193.15574999999998,
+        "load": 441.00954199999995,
+        "replayExistingAssetsOnly": 117.48525,
+        "saveAll": 194.851209,
+        "saveOne": 203.74658300000002,
+        "seed": 31141.780833999997,
+        "serializeOnly": 26.515041999999998,
+        "staleReject": 54.033042,
+        "validateOnly": 32.502917
+      },
+      "runs": 5,
+      "samplesMs": [
+        [
+          29282.3315, 30213.813958, 31141.780833999997, 31272.320625,
+          32121.055083000003
+        ],
+        [
+          242.686666, 268.49699999999996, 441.00954199999995, 455.233084,
+          1038.109375
+        ],
+        [
+          173.464625, 175.68200000000002, 203.74658300000002, 210.490125,
+          522.41925
+        ],
+        [173.655583, 174.762125, 194.851209, 195.565458, 508.123042],
+        [175.025583, 179.105709, 193.15574999999998, 215.712417, 572.337],
+        [49.567916, 50.993833, 54.033042, 56.300958, 151.188584],
+        [26.053875, 26.092166, 32.502917, 39.103417, 88.935292],
+        [23.2155, 23.477917, 26.515041999999998, 34.810792, 38.705000000000005],
+        [
+          111.10012499999999, 116.05958399999999, 117.48525, 130.532958,
+          481.04979199999997
+        ]
+      ]
+    }
+  ],
+  "typescript": [
+    {
+      "concepts": 100,
+      "brands": 10,
+      "runs": 5,
+      "ipcBytes": 3601284,
+      "medianMs": {
+        "jsonParse": 1.50912500000004,
+        "stringify": 1.5457499999999982,
+        "structuredClone": 0.7292909999999893,
+        "schema": 11.721291999999949,
+        "storeSaveOne": 27.342374999999947,
+        "storeSaveVersion": 26,
+        "storeDelete": 21.461874999999964,
+        "galleryPromptWall": 8.395042000000103,
+        "galleryProfiler": 5.671979000007468
+      },
+      "artworkRendersPerPrompt": [100, 100, 100, 100, 100],
+      "samplesMs": {
+        "parse": [
+          1.50912500000004, 1.420082999999977, 6.84375, 2.02795900000001,
+          1.345625000000041
+        ],
+        "stringify": [
+          2.022624999999948, 1.8564160000000811, 1.4438750000000482,
+          1.4838750000000118, 1.5457499999999982
+        ],
+        "clone": [
+          3.6585000000000036, 1.0188340000000835, 0.6415829999999687,
+          0.6352080000000342, 0.7292909999999893
+        ],
+        "validate": [
+          16.08029099999999, 12.810500000000047, 9.935583000000065,
+          11.721291999999949, 10.909750000000031
+        ],
+        "saveOne": [
+          33.032790999999975, 25.84495800000002, 27.976333000000068,
+          27.342374999999947, 23.45770800000014
+        ],
+        "saveVersion": [
+          27.44237499999997, 26, 23.985124999999925, 25.959125000000085,
+          32.858791999999994
+        ],
+        "remove": [
+          24.01366699999994, 19.226875000000064, 21.461874999999964,
+          18.889124999999922, 21.792041000000154
+        ],
+        "updateWall": [
+          13.63862499999982, 10.678042000000005, 8.196875000000091,
+          8.395042000000103, 7.664583999999877
+        ],
+        "renderDuration": [
+          9.578345000000354, 7.385083000002169, 5.356532000009338,
+          5.671979000007468, 4.45329199999901
+        ]
+      },
+      "memoryObservation": {
+        "heapBefore": 68309432,
+        "heapAfter": 100730608,
+        "rssBefore": 159039488,
+        "rssAfter": 222707712
+      }
+    },
+    {
+      "concepts": 500,
+      "brands": 50,
+      "runs": 5,
+      "ipcBytes": 18002744,
+      "medianMs": {
+        "jsonParse": 7.729041999999936,
+        "stringify": 7.96087499999976,
+        "structuredClone": 4.826833000000079,
+        "schema": 47.06658299999981,
+        "storeSaveOne": 106.08325000000013,
+        "storeSaveVersion": 118.22254199999998,
+        "storeDelete": 101.20416699999987,
+        "galleryPromptWall": 45.3336249999993,
+        "galleryProfiler": 32.782945000021755
+      },
+      "artworkRendersPerPrompt": [500, 500, 500, 500, 500],
+      "samplesMs": {
+        "parse": [
+          10.641624999999976, 6.108208000000104, 7.241624999999885,
+          8.110833000000184, 7.729041999999936
+        ],
+        "stringify": [
+          8.849582999999939, 7.778542000000016, 8.523500000000013,
+          7.416958999999906, 7.96087499999976
+        ],
+        "clone": [
+          3.87762500000008, 4.374625000000151, 4.826833000000079,
+          5.018416000000116, 5.423792000000049
+        ],
+        "validate": [
+          51.66379200000006, 56.21875, 45.30549999999994, 44.405042000000094,
+          47.06658299999981
+        ],
+        "saveOne": [
+          100.39587500000016, 115.52758300000005, 105.37083299999995,
+          106.08325000000013, 107.02391699999998
+        ],
+        "saveVersion": [
+          119.71025000000009, 109.93825000000015, 109.44045799999958,
+          118.22254199999998, 134.7024580000002
+        ],
+        "remove": [
+          112.12566599999991, 101.20416699999987, 96.4980000000005,
+          98.13499999999931, 106.60924999999952
+        ],
+        "updateWall": [
+          71.97841599999992, 66.63341700000001, 45.3336249999993,
+          31.585000000000036, 38.662624999999935
+        ],
+        "renderDuration": [
+          53.14213200001359, 39.802081000055296, 32.782945000021755,
+          19.64752499997485, 25.68559300006291
+        ]
+      },
+      "memoryObservation": {
+        "heapBefore": 195243472,
+        "heapAfter": 225467192,
+        "rssBefore": 387465216,
+        "rssAfter": 533397504
+      }
+    },
+    {
+      "concepts": 2000,
+      "brands": 200,
+      "runs": 5,
+      "ipcBytes": 72018819,
+      "medianMs": {
+        "jsonParse": 35.56970799999999,
+        "stringify": 35.51208399999996,
+        "structuredClone": 32.50337500000023,
+        "schema": 191.10554200000024,
+        "storeSaveOne": 469.6539580000008,
+        "storeSaveVersion": 488.5947499999993,
+        "storeDelete": 408.246083,
+        "galleryPromptWall": 125.98250000000007,
+        "galleryProfiler": 78.658774999878
+      },
+      "artworkRendersPerPrompt": [2000, 2000, 2000, 2000, 2000],
+      "samplesMs": {
+        "parse": [
+          39.830957999999555, 35.102208000000246, 38.35833300000013,
+          35.56970799999999, 32.82404099999985
+        ],
+        "stringify": [
+          54.57983400000012, 35.51208399999996, 33.11341699999957,
+          33.74970899999971, 37.94383300000027
+        ],
+        "clone": [
+          38.994958000000224, 58.115999999999985, 32.50337500000023,
+          32.45383299999958, 30.77783399999953
+        ],
+        "validate": [
+          191.10554200000024, 179.52958300000046, 197.70949999999993,
+          193.0478750000002, 187.1899999999996
+        ],
+        "saveOne": [
+          434.5564170000007, 444.7546249999996, 541.9524590000001,
+          469.6539580000008, 626.3280829999985
+        ],
+        "saveVersion": [
+          424.03166599999986, 488.5947499999993, 519.6297500000001,
+          844.7454170000001, 405.3765829999993
+        ],
+        "remove": [
+          381.7346660000003, 406.6166659999999, 408.246083, 418.4959579999995,
+          414.01991599999747
+        ],
+        "updateWall": [
+          127.93025000000125, 124.17104199999994, 125.98250000000007,
+          114.46166699999958, 132.35604199999943
+        ],
+        "renderDuration": [
+          79.64504000017769, 80.93902200018965, 78.658774999878,
+          71.80938099996092, 74.83794499988107
+        ]
+      },
+      "memoryObservation": {
+        "heapBefore": 366597664,
+        "heapAfter": 491608368,
+        "rssBefore": 807649280,
+        "rssAfter": 1777631232
+      }
+    }
+  ],
+  "boundaryProbe": {
+    "acceptedSaveBytes": 134216704,
+    "capBytes": 134217728,
+    "reloadError": "WORKSPACE_TOO_LARGE"
+  },
+  "rustSampleColumns": [
+    "seed",
+    "load",
+    "saveOne",
+    "saveAll",
+    "deleteOne",
+    "staleReject",
+    "validateOnly",
+    "serializeOnly",
+    "replayExistingAssetsOnly"
+  ],
+  "sampleNotes": "Rust sample arrays are sorted by median calculation; TypeScript samples retain collection order. Five runs per size. Boundary probe is one correctness observation, not a timing median.",
+  "typescriptFirstFullRun": [
+    {
+      "concepts": 100,
+      "brands": 10,
+      "runs": 5,
+      "ipcBytes": 3601284,
+      "medianMs": {
+        "jsonParse": 1.4729589999999462,
+        "stringify": 1.9426670000000286,
+        "structuredClone": 1.1313750000000482,
+        "schema": 11.003916000000004,
+        "storeSaveOne": 26.779709000000025,
+        "storeSaveVersion": 28.862916999999925,
+        "storeDelete": 25.425250000000005,
+        "galleryPromptWall": 12.925250000000005,
+        "galleryProfiler": 7.338373999997202
+      },
+      "artworkRendersPerPrompt": [100, 100, 100, 100, 100],
+      "samplesMs": {
+        "parse": [
+          1.4729589999999462, 3.0642910000000256, 7.163999999999987,
+          1.3397919999999885, 1.3620839999999816
+        ],
+        "stringify": [
+          1.9426670000000286, 5.4587080000000014, 2.7151669999999513,
+          1.5890000000000555, 1.5675830000000133
+        ],
+        "clone": [
+          5.92608400000006, 1.1313750000000482, 1.461541000000011,
+          0.7017079999999396, 0.7356670000000349
+        ],
+        "validate": [
+          21.50587500000006, 14.944916000000035, 10.899000000000001,
+          10.531499999999937, 11.003916000000004
+        ],
+        "saveOne": [
+          31.187333999999964, 26.779709000000025, 23.94037500000013,
+          23.711125000000038, 29.832582999999886
+        ],
+        "saveVersion": [
+          31.630959000000075, 28.862916999999925, 27.161000000000058,
+          26.158249999999953, 29.661166000000094
+        ],
+        "remove": [
+          32.677459, 31.30383299999994, 22.35462500000017, 25.265291999999818,
+          25.425250000000005
+        ],
+        "updateWall": [
+          21.826334000000088, 10.849917000000005, 9.396334000000024,
+          12.925250000000005, 14.987666999999874
+        ],
+        "renderDuration": [
+          17.744056000002047, 7.338373999997202, 5.35208500000067,
+          6.646182000001318, 10.284481999995705
+        ]
+      },
+      "memoryObservation": {
+        "heapBefore": 67779544,
+        "heapAfter": 100921600,
+        "rssBefore": 157384704,
+        "rssAfter": 226459648
+      }
+    },
+    {
+      "concepts": 500,
+      "brands": 50,
+      "runs": 5,
+      "ipcBytes": 18002744,
+      "medianMs": {
+        "jsonParse": 7.499957999999879,
+        "stringify": 7.887958999999682,
+        "structuredClone": 4.5597499999998945,
+        "schema": 46.86729100000002,
+        "storeSaveOne": 115.62362500000017,
+        "storeSaveVersion": 122.52741699999979,
+        "storeDelete": 104.84712499999932,
+        "galleryPromptWall": 30.15429200000017,
+        "galleryProfiler": 18.63010199996279
+      },
+      "artworkRendersPerPrompt": [500, 500, 500, 500, 500],
+      "samplesMs": {
+        "parse": [
+          22.903915999999754, 6.4552920000000995, 7.270958000000064,
+          7.499957999999879, 7.513500000000022
+        ],
+        "stringify": [
+          11.135167000000365, 11.678084000000126, 7.887958999999682,
+          7.582875000000058, 7.75020799999993
+        ],
+        "clone": [
+          4.884665999999925, 4.920916999999918, 4.5597499999998945,
+          4.4667499999995925, 4.441833999999744
+        ],
+        "validate": [
+          52.09808299999986, 46.37608299999965, 50.18687499999987,
+          46.86729100000002, 45.40479099999993
+        ],
+        "saveOne": [
+          126.22849999999971, 116.56120899999996, 113.42066699999987,
+          115.62362500000017, 112.35133399999995
+        ],
+        "saveVersion": [
+          125.808583, 122.52741699999979, 116.98970800000006,
+          116.90854200000012, 123.51745800000026
+        ],
+        "remove": [
+          103.03166599999986, 106.41220900000008, 105.06887499999993,
+          101.52199999999993, 104.84712499999932
+        ],
+        "updateWall": [
+          30.15429200000017, 55.60383300000012, 40.22937499999989,
+          28.392791999999645, 28.516625000000204
+        ],
+        "renderDuration": [
+          18.63010199996279, 32.551611000003504, 25.182527999980266,
+          17.839509000029466, 17.759355000052892
+        ]
+      },
+      "memoryObservation": {
+        "heapBefore": 195438584,
+        "heapAfter": 225602656,
+        "rssBefore": 389070848,
+        "rssAfter": 534953984
+      }
+    },
+    {
+      "concepts": 2000,
+      "brands": 200,
+      "runs": 5,
+      "ipcBytes": 72018819,
+      "medianMs": {
+        "jsonParse": 29.903542000000016,
+        "stringify": 29.620249999999942,
+        "structuredClone": 27.013500000000022,
+        "schema": 178.64750000000004,
+        "storeSaveOne": 427.05212500000016,
+        "storeSaveVersion": 429.25287500000013,
+        "storeDelete": 447.3070830000015,
+        "galleryPromptWall": 148.97708299999977,
+        "galleryProfiler": 90.70304400015448
+      },
+      "artworkRendersPerPrompt": [2000, 2000, 2000, 2000, 2000],
+      "samplesMs": {
+        "parse": [
+          32.46958300000006, 28.829499999999825, 29.903542000000016,
+          29.1143749999992, 30.776209000000563
+        ],
+        "stringify": [
+          34.36700000000019, 29.385709000000134, 30.437582999999904,
+          29.172624999999243, 29.620249999999942
+        ],
+        "clone": [
+          21.791666000000077, 28.21429199999966, 24.522625000000517,
+          31.806000000000495, 27.013500000000022
+        ],
+        "validate": [
+          179.2973750000001, 178.44641600000068, 179.8930419999997,
+          174.7718329999998, 178.64750000000004
+        ],
+        "saveOne": [
+          387.0916669999997, 411.54108300000007, 439.66895899999963,
+          427.05212500000016, 434.97312500000044
+        ],
+        "saveVersion": [
+          408.72466600000007, 429.25287500000013, 463.7972920000011,
+          450.91220799999974, 397.36320800000067
+        ],
+        "remove": [
+          452.01995799999895, 431.4405829999996, 447.3070830000015,
+          437.136625000001, 450.01787499999955
+        ],
+        "updateWall": [
+          148.97708299999977, 132.14808300000004, 161.2849580000002,
+          145.3529579999995, 151.26000000000022
+        ],
+        "renderDuration": [
+          90.70304400015448, 84.31573899986142, 84.51227200011635,
+          93.11770799959959, 95.42903300006401
+        ]
+      },
+      "memoryObservation": {
+        "heapBefore": 371360208,
+        "heapAfter": 416540728,
+        "rssBefore": 812613632,
+        "rssAfter": 1784823808
+      }
+    }
+  ],
+  "frontendRefresh": {
+    "command": "node scripts/performance-baseline.mjs --frontend-only",
+    "sourceStart": {
+      "src-tauri/src/storage.rs": "274017a2feacd18f33180dcc46a56f0dc5ad8e7cf42c52bd9087a6d6e34cc636",
+      "src-tauri/src/model.rs": "d89ad39bc893c5b487dba68075c374923e5d62cedfd553cef2486a7c08520528",
+      "src/application/use-studio.ts": "be6e02f1b663ac27058263764db12fd8da575cfb4012f7ad4775cb0fd4922901",
+      "src/domain/schema.ts": "be464131e06a2d1405dda4579c916504540bacf5317647caf5b5be5528533224",
+      "src/presentation/concept-card.tsx": "d89fd1394e34b0bd970d79fd849ae5a4870d95034baea23af4f31f677904c007",
+      "src/presentation/creative-canvas.tsx": "7b2847b89072c6e9d3f65c774bf8048000a9c1ff67c22e5305c7805c28a71e6e",
+      "src/presentation/brand-sidebar.tsx": "11fa49431e142ca5d47acbec1a5b347fd04da6ad5031e27bf2f94b8a124554b7"
+    },
+    "sourceEnd": {
+      "src-tauri/src/storage.rs": "274017a2feacd18f33180dcc46a56f0dc5ad8e7cf42c52bd9087a6d6e34cc636",
+      "src-tauri/src/model.rs": "d89ad39bc893c5b487dba68075c374923e5d62cedfd553cef2486a7c08520528",
+      "src/application/use-studio.ts": "be6e02f1b663ac27058263764db12fd8da575cfb4012f7ad4775cb0fd4922901",
+      "src/domain/schema.ts": "be464131e06a2d1405dda4579c916504540bacf5317647caf5b5be5528533224",
+      "src/presentation/concept-card.tsx": "d89fd1394e34b0bd970d79fd849ae5a4870d95034baea23af4f31f677904c007",
+      "src/presentation/creative-canvas.tsx": "7b2847b89072c6e9d3f65c774bf8048000a9c1ff67c22e5305c7805c28a71e6e",
+      "src/presentation/brand-sidebar.tsx": "11fa49431e142ca5d47acbec1a5b347fd04da6ad5031e27bf2f94b8a124554b7"
+    },
+    "stages": [
+      {
+        "scope": "frontend",
+        "sources": {
+          "src-tauri/src/storage.rs": "274017a2feacd18f33180dcc46a56f0dc5ad8e7cf42c52bd9087a6d6e34cc636",
+          "src-tauri/src/model.rs": "d89ad39bc893c5b487dba68075c374923e5d62cedfd553cef2486a7c08520528",
+          "src/application/use-studio.ts": "be6e02f1b663ac27058263764db12fd8da575cfb4012f7ad4775cb0fd4922901",
+          "src/domain/schema.ts": "be464131e06a2d1405dda4579c916504540bacf5317647caf5b5be5528533224",
+          "src/presentation/concept-card.tsx": "d89fd1394e34b0bd970d79fd849ae5a4870d95034baea23af4f31f677904c007",
+          "src/presentation/creative-canvas.tsx": "7b2847b89072c6e9d3f65c774bf8048000a9c1ff67c22e5305c7805c28a71e6e",
+          "src/presentation/brand-sidebar.tsx": "11fa49431e142ca5d47acbec1a5b347fd04da6ad5031e27bf2f94b8a124554b7"
+        }
+      },
+      {
+        "scope": "frontend",
+        "sources": {
+          "src-tauri/src/storage.rs": "274017a2feacd18f33180dcc46a56f0dc5ad8e7cf42c52bd9087a6d6e34cc636",
+          "src-tauri/src/model.rs": "d89ad39bc893c5b487dba68075c374923e5d62cedfd553cef2486a7c08520528",
+          "src/application/use-studio.ts": "be6e02f1b663ac27058263764db12fd8da575cfb4012f7ad4775cb0fd4922901",
+          "src/domain/schema.ts": "be464131e06a2d1405dda4579c916504540bacf5317647caf5b5be5528533224",
+          "src/presentation/concept-card.tsx": "d89fd1394e34b0bd970d79fd849ae5a4870d95034baea23af4f31f677904c007",
+          "src/presentation/creative-canvas.tsx": "7b2847b89072c6e9d3f65c774bf8048000a9c1ff67c22e5305c7805c28a71e6e",
+          "src/presentation/brand-sidebar.tsx": "11fa49431e142ca5d47acbec1a5b347fd04da6ad5031e27bf2f94b8a124554b7"
+        }
+      }
+    ],
+    "sourceStable": true
+  },
+  "sourceNote": "Concurrent full-run drift in storage.rs, use-studio.ts and schema.ts is disclosed. Native results are from the release binary compiled at the beginning of the full run; refreshed frontend results are from a separate run with identical before/after source fingerprints. No immutable combined native-WebKit run is claimed."
+}
