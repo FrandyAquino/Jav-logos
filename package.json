@@ -29,6 +29,7 @@
     "react-colorful": "^5.8.1",
     "react-dom": "^19.2.0",
     "svgpath": "^2.6.0",
+    "three": "^0.187.0",
     "zod": "^4.0.0",
     "zustand": "^5.0.0"
   },
@@ -42,6 +43,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.187.0",
     "@vitejs/plugin-react": "^5.0.0",
     "eslint": "^9.0.0",
     "eslint-plugin-react-hooks": "^7.0.0",

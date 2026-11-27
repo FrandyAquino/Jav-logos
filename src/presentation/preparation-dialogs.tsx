@@ -20,7 +20,7 @@ export function BackgroundDialog({
 }: {
   concept: Concept;
   studio: StudioState;
-  close: () => void;
+  close: (saved?: boolean) => void;
 }) {
   const [tolerance, setTolerance] = useState(24);
   const [enclosed, setEnclosed] = useState(false);
@@ -138,7 +138,8 @@ export function BackgroundDialog({
                 lock.current = true;
                 setSaving(true);
                 try {
-                  if (await studio.saveCutout(concept.id, preview.png)) close();
+                  if (await studio.saveCutout(concept.id, preview.png))
+                    close(true);
                   else
                     setError(
                       "Could not save the copy. Your original is unchanged; close and retry after resolving the workspace error.",

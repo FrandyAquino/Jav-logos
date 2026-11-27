@@ -398,7 +398,10 @@ export function CreativeCanvas({
           <p>Select a concept to begin editing.</p>
         </div>
       )}
-      <div className="workspace-composer" hidden={surface === "refine"}>
+      <div
+        className="workspace-composer"
+        hidden={surface === "refine" || surface === "mockups"}
+      >
         <GenerationBar studio={studio} />
       </div>
       {deleting && (

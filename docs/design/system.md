@@ -1,5 +1,7 @@
 # Workspace design system
 
+Mockup studio uses a compact categorized horizontal scene catalog, a dominant 3D stage and grouped appearance controls below it. Wheel gestures scroll the panel; drag or arrow keys rotate the scene, with named camera, zoom and reset buttons as alternatives. Keep original artwork/background choices explicit. Show graphics failures as a flat preview with retry and disabled export. Label the result as a local studio render, not photography or a print proof. Settings are temporary; export captures the current camera at a 2048px longest edge.
+
 The subject is brand-making: keep the artboard dominant, hierarchy legible and inherited rules visible. The refined shell follows JavParlance's floating-panel composition with8px gutters, quiet glass and steel-blue actions. Artwork lives on a neutral artboard independent of shell theme. Native window controls are retained. macOS uses a titlebar overlay with dedicated control space and a draggable header; other platforms retain their standard titlebar fallback. See `ui-refinement.md` for the user-directed brief and reference evidence.
 
 Three panels: brand family → gallery/artboard → contextual inspector. Wide layouts support pointer/keyboard resizing. Compact layouts use fixed columns, then stacked inspector/panels, with resizing controls removed when they no longer apply. The composer and primary actions stay reachable without shrinking text.

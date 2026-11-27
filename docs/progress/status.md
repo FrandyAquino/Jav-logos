@@ -39,7 +39,7 @@ Actual FLUX smoke: 256×256 text generation 20.216 seconds; reference refinement
 
 ## Remaining release gates
 
-This is a functional development build, **not a production-certified cross-platform release**. Signing/notarization, Windows/Linux runtime/device acceptance, clean-machine Python/model/runtime provisioning, optional provider acceptance, advanced vector boolean operations, print/PDF certification, photorealistic mockup rendering and external creative integrations remain open. Native window vibrancy is not enabled; the app uses an opaque native-window fallback with CSS glass surfaces.
+This is a functional development build, **not a production-certified cross-platform release**. Signing/notarization, Windows/Linux runtime/device acceptance, clean-machine Python/model/runtime provisioning, optional provider acceptance, advanced vector boolean operations, print/PDF certification, photographic mockup compositing and external creative integrations remain open. Native window vibrancy is not enabled; the app uses an opaque native-window fallback with CSS glass surfaces.
 
 Workspace snapshots load assets into memory and retain unreferenced asset files after failures. Initial native-storage and simulated-frontend profiling is recorded in [performance-baseline.md](performance-baseline.md), with opt-in reproducible benchmarks, a reproduced save/load size-accounting edge and a prioritized fix plan; lazy asset loading and safe garbage collection remain future work. Recovery copies protect completed batches after save failures; forced app termination/power loss during unsaved work has not been certified. The frontend close guard covers window-close handling; platform menu-quit behavior with an unsaved recovery batch still needs native acceptance, and operating-system force quit is outside that guard.
 
@@ -62,3 +62,7 @@ Delivery preparation implemented and verified: see `delivery-preparation.md` for
 Reference image paste/drop follow-up: see [reference-paste-drop.md](reference-paste-drop.md) for composer clipboard/drop behavior, 66 TypeScript tests, 10 scoped Chromium regressions and 23 Rust tests passed; native Tauri paste/drop acceptance remains unrun.
 
 Directed refinement added2026-11-27: exact palette/typeface previews and independent saved copies, local AI symbol reinterpretation, persistent before/after snapshots and refinement history.70 TypeScript tests,23 Rust tests,11 Python tests and20 Chromium flows passed; native exact edit and real FLUX refinement also passed. See `directed-refinement.md` for commands, Node25 test compatibility and evidence.
+
+## Realistic mockup studio
+
+Delivered 2026-11-27: fourteen offline 3D scenes with material-specific geometry, bundled HDR lighting, camera/appearance controls and native 2048px PNG export.72 TypeScript tests and25 full Chromium flows passed, followed by5 final mockup regressions including suspended animation frames. Native macOS rendering, camera changes and PNG export passed after correcting a blank-preview issue. See [realistic-mockups.md](realistic-mockups.md) for exact evidence, licenses and remaining platform/performance limits.

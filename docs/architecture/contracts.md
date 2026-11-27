@@ -2,6 +2,12 @@
 
 Dependency flow: presentation → application → domain; infrastructure implements application ports. Rust owns filesystem, SQLite, process lifecycle and privileged dialogs. Python workers receive bounded JSON over stdin and emit one JSON result to stdout; diagnostics go to stderr. No shell evaluation.
 
+## Mockup studio
+
+`src/domain/mockups.ts` owns the scene catalog and bounded appearance settings. `src/infrastructure/mockups/` rasterizes existing sanitized/font-prepared compositions, preserves original raster pixels/backgrounds, crops transparent margins and implements local Three.js materials, geometry, lighting and PNG capture. Presentation owns temporary settings and a single disposed-on-unmount renderer; no scene settings enter the workspace schema. Sources are composition, symbol, original and saved cutout. Foil styling never changes the saved logo.
+
+`exportMockup(conceptId,sceneId,capture)` guards duplicate work, flushes pending writes, captures the latest saved concept/brand and calls the render callback. It validates the scene ID, PNG signature and 32MiB bound before using the existing native `export_file`. Cancellation is inert. The preview restores its current artwork after capture. Rendering uses animation frames with a one-shot deadline for native windows whose frames are suspended; no continuous render loop or remote request is needed. Unsupported/lost WebGL disables export and offers a flat preview/retry.
+
 Frontend source of shared types: `src/domain/types.ts`. A Workspace has `schemaVersion:1`, `revision:number`, `brands:Brand[]`, `concepts:Concept[]`. Native load returns `{snapshot: Workspace|null, revision:number}`. Native save accepts `{snapshot, expectedRevision}` and returns the new revision, rejecting stale writes atomically. Persist full workspace JSON in SQLite with versioned schema; assets use app-data files. Do not silently seed over corrupt data. New concepts can include immutable `generationContext` and an original PNG `reference`; legacy concepts omit them. String limits are UTF-16 units, matching JavaScript; identifiers allow 1–128 ASCII letters, digits, hyphens and underscores.
 
 ## IPC (camelCase arguments; snake_case commands)

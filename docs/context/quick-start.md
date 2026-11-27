@@ -14,6 +14,10 @@ Example for a JavCollections brand:
 
 Local AI readiness verifies the installed runtime configuration; Windows/Linux packaging and clean-machine provisioning still require their own acceptance. The default geometric provider creates deterministic editable studies and does not run an AI model.
 
+## Preview professional applications
+
+Select a saved concept and open **Mockups**. Choose cards, stationery, packaging, apparel, drinkware, signage or a device. Drag to rotate or use Studio/Front/Top view and zoom. Scroll to Appearance & placement for artwork source, material color, backdrop, print size and gold foil. **Export mockup PNG** saves the current view at a 2048px longest edge. A transparent cutout gives an AI symbol a clean printed edge; an opaque original retains its background. Mockup settings reset when you leave the view and never modify the saved logo.
+
 ## Refine a saved direction
 
 Select a concept and open **Refine**. **Exact edit** previews editable colors and typography; **Save refined copy** creates a separate result. For transparent image symbols, an explicit cutout tint preserves alpha/shape. **Local AI** offers Simplify/More geometric/More organic or your own instruction and uses the composition's symbol as its reference. It retains the editable name/slogan/layout; inspect the before/after pair because model preservation requests are not exact locks. Use **Refinement versions** to revisit saved results or **Open source** to return to the original.

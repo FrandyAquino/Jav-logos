@@ -30,7 +30,7 @@ The macOS development app is at `src-tauri/target/debug/bundle/macos/JavLogos.ap
 3. Describe a logo and generate 1–4 concepts. Choose **Geometric concepts** for editable procedural studies or **Local AI · FLUX** for actual model inference. A visual reference applies to local AI.
 4. Inspect the original AI image or compose its symbol with an editable wordmark and slogan. Arrange layers, convert supported traces to editable paths, and save versions before exploring changes.
 5. Export composition SVG/PNG, traced SVG, or a ZIP brand kit with original imagery, vector assets, palette and provenance. Bundled open fonts are embedded in composition SVG; system fonts still require installation.
-6. Compare concepts, keep favorites and notes, preview template mockups, inspect inherited Brand DNA, and export animated SVGs or an editable-in-app brand book as self-contained HTML.
+6. Compare concepts, keep favorites and notes, preview 14 interactive 3D mockups, inspect inherited Brand DNA, and export animated SVGs or an editable-in-app brand book as self-contained HTML.
 7. Use each brand’s menu to rename, complete, archive/restore or pin it. Drag a brand into Pinned or use Move up/down to reorder. Delete unwanted concepts from their thumbnail or gallery card after confirmation.
 
 See the [quick-start guide and example prompt](docs/context/quick-start.md). Accepted prompts clear automatically and remain available under Last sent prompt.
@@ -50,6 +50,10 @@ Open **Refine** on a saved concept. Preview exact color/typeface edits, or choos
 In **Design → Prepare for delivery**, enable **Auto-fit name and slogan** and **Transparent canvas**. For an AI image with a uniform background, use **Remove flat background**, inspect the preview and save a new cutout concept. The original remains intact.
 
 Choose a bundled typeface such as Manrope or Google Sans Flex for **Outlined SVG**. **Logo variants** exports vertical/horizontal, black/white and favicon versions as SVG/PNG, with exact16/32/48px PNG icons, licenses and provenance. A raster symbol stays raster inside the SVG; outlining converts the text only. See [delivery evidence and limits](docs/progress/delivery-preparation.md).
+
+## Present a logo in context
+
+Open **Mockups** on a saved concept. Choose among 14 scenes for print, packaging, merchandise, signage and devices. Rotate the scene, adjust surface/background colors, size and print finish, then **Export mockup PNG** at a 2048px longest edge. Everything renders locally, including bundled studio lighting. For clean prints, choose a transparent cutout or a vector composition; opaque raster backgrounds remain visible. These are 3D studio simulations, not print proofs. See [mockup verification and limits](docs/progress/realistic-mockups.md).
 
 ## Verify
 

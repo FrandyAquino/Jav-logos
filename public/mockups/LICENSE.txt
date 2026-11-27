@@ -1,0 +1,9 @@
+Studio Small 09 — Sergej Majboroda / Poly Haven
+https://polyhaven.com/a/studio_small_09
+
+Poly Haven assets are released under CC0 1.0 Universal.
+License declaration: https://polyhaven.com/license
+CC0 legal code: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+The bundled1K HDR image is used only as local studio illumination/reflections.
+No runtime network request to Poly Haven is required.

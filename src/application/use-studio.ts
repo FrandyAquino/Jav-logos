@@ -47,6 +47,7 @@ import {
   previewCompositionRefinement,
   prepareSymbolReference,
 } from "../infrastructure/refinement-preview";
+import { mockupScene, type MockupSceneId } from "../domain/mockups";
 import { buildBrandBook } from "../infrastructure/brand-book";
 
 interface StudioState {
@@ -918,6 +919,39 @@ const actions = {
         bytes,
       );
       set({ status: saved ? "Logo variants exported" : "Export cancelled" });
+    });
+    set({ busy: false });
+    return saved;
+  },
+  async exportMockup(
+    conceptId: string,
+    sceneId: MockupSceneId,
+    capture: (concept: Concept, brand: Brand) => Promise<Uint8Array>,
+  ): Promise<boolean> {
+    if (get().busy) return false;
+    set({ busy: true, error: null, status: "Preparing mockup export…" });
+    let saved = false;
+    await guarded(async () => {
+      mockupScene(sceneId);
+      await flushWrites();
+      const concept = structuredClone(selectedConcept(conceptId));
+      const brand = get().workspace.brands.find(
+        (brand) => brand.id === concept.brandId,
+      );
+      if (!brand) throw new Error("The mockup brand is no longer available.");
+      const bytes = await capture(concept, structuredClone(brand));
+      if (
+        bytes.length > 32 * 1024 * 1024 ||
+        ![137, 80, 78, 71, 13, 10, 26, 10].every(
+          (value, index) => bytes[index] === value,
+        )
+      )
+        throw new Error("Invalid mockup PNG.");
+      saved = await desktop.exportFile(
+        fileName(`-${sceneId}-mockup.png`, concept.brandId),
+        bytes,
+      );
+      set({ status: saved ? "Mockup exported" : "Export cancelled" });
     });
     set({ busy: false });
     return saved;
